@@ -1,0 +1,23 @@
+{
+  "name": "qualitrack-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "React frontend for the QualiTrack Quality Control Management System",
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "build": "node scripts/build.mjs",
+    "preview": "node scripts/preview.mjs"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.29.0",
+    "@babel/preset-env": "^7.29.0",
+    "@babel/preset-react": "^7.28.5",
+    "babelify": "^10.0.0",
+    "browserify": "^17.0.1"
+  }
+}
