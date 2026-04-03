@@ -63,7 +63,6 @@ function LoginPage({ onLogin }) {
               <span>Quality Control System</span>
             </div>
           </div>
-          <span className="auth-kicker">Secure Access</span>
           <h1>Sign in to the quality control workspace.</h1>
           <p>Choose a demo account or sign in with your own details.</p>
 
@@ -99,6 +98,7 @@ function LoginPage({ onLogin }) {
                 type="email"
                 value={form.email}
                 onChange={updateField}
+                autoComplete="username"
                 placeholder="admin@qualitrack.local"
                 required
               />
@@ -112,6 +112,7 @@ function LoginPage({ onLogin }) {
                 type="password"
                 value={form.password}
                 onChange={updateField}
+                autoComplete="current-password"
                 placeholder="Enter your password"
                 required
               />

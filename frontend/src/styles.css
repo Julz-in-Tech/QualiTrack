@@ -150,22 +150,6 @@ textarea {
   text-transform: uppercase;
 }
 
-.auth-kicker {
-  display: inline-flex;
-  margin-top: 18px;
-  padding: 7px 12px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  color: rgba(255, 255, 255, 0.92);
-  font-size: 0.82rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  position: relative;
-  z-index: 1;
-}
-
 .auth-hero::after {
   content: "";
   position: absolute;
@@ -255,11 +239,11 @@ textarea {
 }
 
 .auth-card .primary-button {
-  background: linear-gradient(135deg, #e76f51, #c75146);
+  background: linear-gradient(135deg, #2563eb, #0891b2);
 }
 
 .auth-card .primary-button:hover {
-  box-shadow: 0 14px 26px rgba(199, 81, 70, 0.28);
+  box-shadow: 0 14px 26px rgba(8, 145, 178, 0.28);
 }
 
 .auth-note {

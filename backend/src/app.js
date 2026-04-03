@@ -12,13 +12,47 @@ const authRoutes = require("./routes/authRoutes");
 const { errorHandler, notFoundHandler } = require("./middleware/errorHandler");
 
 const app = express();
+const allowedOrigins = String(process.env.CORS_ALLOWED_ORIGINS || "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
 
-app.use(
-  cors({
-    origin: true,
-    credentials: true,
-  }),
-);
+function isAllowedOrigin(origin) {
+  if (!origin) {
+    return true;
+  }
+
+  if (allowedOrigins.length === 0) {
+    return true;
+  }
+
+  return allowedOrigins.includes(origin);
+}
+
+const corsOptions = {
+  origin(origin, callback) {
+    if (isAllowedOrigin(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error(`Origin not allowed by CORS: ${origin}`));
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  optionsSuccessStatus: 204,
+};
+
+app.use((req, res, next) => {
+  if (req.headers["access-control-request-private-network"] === "true") {
+    res.header("Access-Control-Allow-Private-Network", "true");
+  }
+
+  next();
+});
+
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 app.use(express.json());
 
 app.get("/api/health", (_req, res) => {
@@ -37,6 +71,6 @@ app.use(errorHandler);
 
 const PORT = Number(process.env.PORT) || 5000;
 
-app.listen(PORT, () => {
-  console.log(`QualiTrack API listening on port ${PORT}`);
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`🚀 QualiTrack API is running on http://127.0.0.1:${PORT}`);
 });

@@ -1,6 +1,40 @@
 const pool = require("../config/db");
 const buildNcrNumber = require("../utils/buildNcrNumber");
 
+let openAiClient = null;
+let hasLoggedOpenAiWarning = false;
+
+function getOpenAiClient() {
+  const apiKey = process.env.OPENAI_API_KEY || process.env.MyAPIKey;
+
+  if (!apiKey) {
+    return null;
+  }
+
+  if (openAiClient) {
+    return openAiClient;
+  }
+
+  try {
+    const { OpenAI } = require("openai");
+
+    openAiClient = new OpenAI({
+      apiKey,
+    });
+
+    return openAiClient;
+  } catch (error) {
+    if (!hasLoggedOpenAiWarning) {
+      console.warn(
+        "OpenAI SDK is not installed. NCR AI suggestions are disabled until `npm install openai` is run.",
+      );
+      hasLoggedOpenAiWarning = true;
+    }
+
+    return null;
+  }
+}
+
 function normalizePhotoUrls(photoUrls) {
   if (Array.isArray(photoUrls)) {
     return photoUrls.filter(Boolean);
@@ -44,6 +78,33 @@ function validateIncomingPayload(payload) {
   }
 
   return errors;
+}
+
+async function getAiSuggestedRootCause(partNumber, comments) {
+  if (!comments) {
+    return null;
+  }
+
+  const openai = getOpenAiClient();
+
+  if (!openai) {
+    return null;
+  }
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [
+        { role: "system", content: "You are a quality engineering assistant. Based on inspection comments, provide a concise, technical suggestion for the root cause of the defect." },
+        { role: "user", content: `Part: ${partNumber}. Comments: ${comments}` }
+      ],
+      max_tokens: 100,
+    });
+    return response.choices[0].message.content.trim();
+  } catch (error) {
+    console.error("AI Analysis Error:", error);
+    return null;
+  }
 }
 
 async function createIncomingQC(req, res, next) {
@@ -105,6 +166,11 @@ async function createIncomingQC(req, res, next) {
 
     if (Number(payload.qtyFailed) > 0) {
       const ncrNumber = buildNcrNumber(qcInsert.rows[0].id);
+      
+      // Use the API to generate a professional NCR description
+      const aiSuggestion = await getAiSuggestedRootCause(payload.partNumber, payload.comments);
+      const ncrDescription = aiSuggestion || `${payload.qtyFailed} item(s) failed inspection for PO ${payload.poNumber.trim()}.`;
+
       const ncrInsert = await client.query(
         `
           INSERT INTO ncrs (
@@ -123,7 +189,7 @@ async function createIncomingQC(req, res, next) {
           "Supplier",
           "incoming_qc",
           qcInsert.rows[0].id,
-          `${payload.qtyFailed} item(s) failed incoming inspection for PO ${payload.poNumber.trim()} and part ${payload.partNumber.trim()}.`,
+          ncrDescription,
           "Open",
         ],
       );

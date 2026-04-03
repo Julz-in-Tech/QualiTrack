@@ -1,4 +1,5 @@
 const pool = require("../config/db");
+const jwt = require("jsonwebtoken");
 const { verifyPassword } = require("../utils/passwords");
 
 async function login(req, res, next) {
@@ -37,8 +38,15 @@ async function login(req, res, next) {
       });
     }
 
+    const token = jwt.sign(
+      { id: user.id, email: user.email, role: user.role },
+      process.env.JWT_SECRET || "qualitrack_secret_key",
+      { expiresIn: "24h" }
+    );
+
     return res.json({
       message: "Login successful.",
+      token,
       user: {
         id: user.id,
         fullName: user.full_name,
@@ -47,6 +55,7 @@ async function login(req, res, next) {
       },
     });
   } catch (error) {
+    console.error("Login Error:", error); // This helps you see why it's a 500
     return next(error);
   }
 }
