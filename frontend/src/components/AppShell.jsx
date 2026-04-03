@@ -1,6 +1,19 @@
-function AppShell({ children }) {
+function AppShell({ children, currentUser, onLogout }) {
   return (
     <main className="app-shell">
+      <div className="app-topbar">
+        <div className="user-badge">
+          <strong>{currentUser.fullName}</strong>
+          <span>
+            {currentUser.role} · {currentUser.email}
+          </span>
+        </div>
+
+        <button className="secondary-button" type="button" onClick={onLogout}>
+          Logout
+        </button>
+      </div>
+
       <section className="hero">
         <article className="hero-card">
           <span className="eyebrow">QualiTrack MVP</span>

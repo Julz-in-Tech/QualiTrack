@@ -20,6 +20,18 @@ export async function fetchIncomingSummary() {
   return readResponse(response);
 }
 
+export async function loginUser(payload) {
+  const response = await fetch(`${API_BASE_URL}/auth/login`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  return readResponse(response);
+}
+
 export async function createIncomingQC(payload) {
   const response = await fetch(`${API_BASE_URL}/qc/incoming`, {
     method: "POST",

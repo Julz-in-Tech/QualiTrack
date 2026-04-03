@@ -73,6 +73,23 @@ function IncomingQC() {
     setForm((current) => ({
       ...current,
       [name]: value,
+      // Business Logic: Automatically balance quantities to prevent validation errors
+      ...(name === "qtyReceived" && {
+        qtyPassed: value,
+        qtyFailed: "0",
+      }),
+      ...(name === "qtyFailed" && {
+        qtyPassed: Math.max(
+          0,
+          (parseInt(current.qtyReceived, 10) || 0) - (parseInt(value, 10) || 0)
+        ).toString(),
+      }),
+      ...(name === "qtyPassed" && {
+        qtyFailed: Math.max(
+          0,
+          (parseInt(current.qtyReceived, 10) || 0) - (parseInt(value, 10) || 0)
+        ).toString(),
+      }),
     }));
   }
 
@@ -101,9 +118,15 @@ function IncomingQC() {
       setForm(initialForm);
       await loadSummary();
     } catch (error) {
+      // Extract backend error messages if available
+      const serverMessage = error.response?.data?.message || error.message;
+      const validationErrors = error.response?.data?.errors;
+
       setMessage({
         type: "error",
-        text: error.message,
+        text: validationErrors 
+          ? `${serverMessage}: ${validationErrors.join(" ")}` 
+          : serverMessage,
       });
     } finally {
       setIsSubmitting(false);

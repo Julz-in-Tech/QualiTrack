@@ -1,10 +1,14 @@
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
+const path = require("path");
 
-dotenv.config();
+dotenv.config({
+  path: path.resolve(__dirname, "../.env"),
+});
 
 const qcRoutes = require("./routes/qcRoutes");
+const authRoutes = require("./routes/authRoutes");
 const { errorHandler, notFoundHandler } = require("./middleware/errorHandler");
 
 const app = express();
@@ -26,6 +30,7 @@ app.get("/api/health", (_req, res) => {
 });
 
 app.use("/api/qc", qcRoutes);
+app.use("/api/auth", authRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);
