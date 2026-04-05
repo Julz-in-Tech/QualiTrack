@@ -71,17 +71,32 @@ QualiTrack/
 ### 1. Backend
 
 ```bash
+docker compose up -d db
 cd backend
 npm install
 copy .env.example .env
 ```
 
-Update `.env` with your PostgreSQL credentials, then create the database schema:
+If you use the included Docker database, the default `.env.example` values already match it and the schema is loaded automatically on first start.
+
+If you are using your own PostgreSQL instance instead, update `.env` with your credentials, then create the database schema manually:
 
 ```bash
 psql -U postgres -d qualitrack -f sql/schema.sql
 psql -U postgres -d qualitrack -f sql/seed.sql
+```
+
+Then start the API:
+
+```bash
 npm run dev
+```
+
+To reset the Docker database from scratch, run:
+
+```bash
+docker compose down -v
+docker compose up -d db
 ```
 
 ### 2. Frontend
