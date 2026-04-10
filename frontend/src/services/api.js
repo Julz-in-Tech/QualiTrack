@@ -41,6 +41,9 @@ function getMockData(path, options = {}) {
     // Get stored inspections from localStorage
     const inspections = JSON.parse(localStorage.getItem('qualitrack_inspections') || '[]');
     
+    // Debug: Log what we found
+    console.log('LocalStorage inspections found:', inspections.length, inspections);
+    
     // Calculate stats from stored inspections
     const stats = inspections.reduce((acc, inspection) => {
       acc.total_inspections += 1;
@@ -55,6 +58,8 @@ function getMockData(path, options = {}) {
       accepted_count: 0,
     });
 
+    console.log('Calculated stats:', stats);
+
     return {
       stats,
       recentInspections: inspections.slice(-10).reverse() // Last 10 inspections, newest first
@@ -64,6 +69,8 @@ function getMockData(path, options = {}) {
   if (path === "/qc/incoming" && options.method === 'POST') {
     // Parse the request body to get form data
     const formData = JSON.parse(options.body || '{}');
+    
+    console.log('POST data received:', formData);
     
     // Create new inspection record with complete data
     const newInspection = {
@@ -88,10 +95,17 @@ function getMockData(path, options = {}) {
       productTrends: formData.productTrends
     };
     
+    console.log('New inspection created:', newInspection);
+    
     // Get existing inspections and add new one
     const inspections = JSON.parse(localStorage.getItem('qualitrack_inspections') || '[]');
+    console.log('Existing inspections count:', inspections.length);
     inspections.push(newInspection);
     localStorage.setItem('qualitrack_inspections', JSON.stringify(inspections));
+    
+    // Verify it was saved
+    const saved = JSON.parse(localStorage.getItem('qualitrack_inspections') || '[]');
+    console.log('Total inspections after save:', saved.length);
     
     return {
       data: {
@@ -106,9 +120,13 @@ function getMockData(path, options = {}) {
   // Handle receiving inspection endpoints
   if (path === "/qc/receiving/summary") {
     const inspections = JSON.parse(localStorage.getItem('qualitrack_inspections') || '[]');
+    console.log('Receiving: Total inspections in storage:', inspections.length);
+    
     const receivingInspections = inspections.filter(inspection => 
       inspection.items && inspection.items.some(item => item.inspectionType === "receiving")
     );
+    
+    console.log('Receiving: Filtered receiving inspections:', receivingInspections.length);
     
     const stats = receivingInspections.reduce((acc, inspection) => {
       acc.total_inspections += 1;
@@ -123,6 +141,8 @@ function getMockData(path, options = {}) {
       accepted_count: 0,
     });
 
+    console.log('Receiving: Calculated stats:', stats);
+
     return {
       stats,
       recentInspections: receivingInspections.slice(-10).reverse()
@@ -131,6 +151,7 @@ function getMockData(path, options = {}) {
   
   if (path === "/qc/receiving" && options.method === 'POST') {
     const formData = JSON.parse(options.body || '{}');
+    console.log('Receiving POST data received:', formData);
     
     const newInspection = {
       id: Date.now(),
@@ -152,9 +173,15 @@ function getMockData(path, options = {}) {
       productTrends: formData.productTrends
     };
     
+    console.log('Receiving: New inspection created:', newInspection);
+    
     const inspections = JSON.parse(localStorage.getItem('qualitrack_inspections') || '[]');
+    console.log('Receiving: Existing inspections count:', inspections.length);
     inspections.push(newInspection);
     localStorage.setItem('qualitrack_inspections', JSON.stringify(inspections));
+    
+    const saved = JSON.parse(localStorage.getItem('qualitrack_inspections') || '[]');
+    console.log('Receiving: Total inspections after save:', saved.length);
     
     return { data: { id: newInspection.id, status: "created" } };
   }
@@ -162,9 +189,13 @@ function getMockData(path, options = {}) {
   // Handle internal inspection endpoints
   if (path === "/qc/internal/summary") {
     const inspections = JSON.parse(localStorage.getItem('qualitrack_inspections') || '[]');
+    console.log('Internal: Total inspections in storage:', inspections.length);
+    
     const internalInspections = inspections.filter(inspection => 
       inspection.items && inspection.items.some(item => item.inspectionType === "internal")
     );
+    
+    console.log('Internal: Filtered internal inspections:', internalInspections.length);
     
     const stats = internalInspections.reduce((acc, inspection) => {
       acc.total_inspections += 1;
@@ -179,6 +210,8 @@ function getMockData(path, options = {}) {
       accepted_count: 0,
     });
 
+    console.log('Internal: Calculated stats:', stats);
+
     return {
       stats,
       recentInspections: internalInspections.slice(-10).reverse()
@@ -187,6 +220,7 @@ function getMockData(path, options = {}) {
   
   if (path === "/qc/internal" && options.method === 'POST') {
     const formData = JSON.parse(options.body || '{}');
+    console.log('Internal POST data received:', formData);
     
     const newInspection = {
       id: Date.now(),
@@ -202,9 +236,15 @@ function getMockData(path, options = {}) {
       overallFailureRate: formData.overallFailureRate
     };
     
+    console.log('Internal: New inspection created:', newInspection);
+    
     const inspections = JSON.parse(localStorage.getItem('qualitrack_inspections') || '[]');
+    console.log('Internal: Existing inspections count:', inspections.length);
     inspections.push(newInspection);
     localStorage.setItem('qualitrack_inspections', JSON.stringify(inspections));
+    
+    const saved = JSON.parse(localStorage.getItem('qualitrack_inspections') || '[]');
+    console.log('Internal: Total inspections after save:', saved.length);
     
     return { data: { id: newInspection.id, status: "created" } };
   }
