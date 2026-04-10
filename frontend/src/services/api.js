@@ -20,7 +20,7 @@ async function readResponse(response) {
 async function request(path, options) {
   // In production, return mock data since backend isn't deployed
   if (isProduction) {
-    return getMockData(path);
+    return getMockData(path, options);
   }
 
   try {
@@ -35,17 +35,15 @@ async function request(path, options) {
   }
 }
 
-function getMockData(path) {
+function getMockData(path, options = {}) {
   // Mock data for production when backend isn't available
   if (path === "/qc/incoming/summary") {
-    return {
-      stats: {
-        total_inspections: 45,
-        total_received: 100,
-        total_failed: 5,
-        accepted_count: 40,
-      },
-      recentInspections: [
+    // Get stored inspections from localStorage
+    const storedInspections = JSON.parse(localStorage.getItem('qualitrack_inspections') || '[]');
+    
+    // Add sample data if no inspections exist
+    if (storedInspections.length === 0) {
+      const sampleInspections = [
         {
           id: 1,
           poNumber: "PO-2024-001",
@@ -68,14 +66,57 @@ function getMockData(path) {
           createdAt: new Date(Date.now() - 7200000).toISOString(),
           status: "completed"
         }
-      ]
+      ];
+      localStorage.setItem('qualitrack_inspections', JSON.stringify(sampleInspections));
+    }
+    
+    const inspections = JSON.parse(localStorage.getItem('qualitrack_inspections') || '[]');
+    
+    // Calculate stats from stored inspections
+    const stats = inspections.reduce((acc, inspection) => {
+      acc.total_inspections += 1;
+      acc.total_received += inspection.qtyReceived || 0;
+      acc.total_failed += inspection.qtyFailed || 0;
+      acc.accepted_count += (inspection.qtyPassed || 0) > 0 ? 1 : 0;
+      return acc;
+    }, {
+      total_inspections: 0,
+      total_received: 0,
+      total_failed: 0,
+      accepted_count: 0,
+    });
+
+    return {
+      stats,
+      recentInspections: inspections.slice(-10).reverse() // Last 10 inspections, newest first
     };
   }
   
-  if (path === "/qc/incoming") {
+  if (path === "/qc/incoming" && options.method === 'POST') {
+    // Parse the request body to get form data
+    const formData = JSON.parse(options.body || '{}');
+    
+    // Create new inspection record
+    const newInspection = {
+      id: Date.now(),
+      poNumber: formData.poNumber || "Unknown PO",
+      partNumber: formData.partNumber || "Unknown Part",
+      qtyReceived: formData.qtyReceived || 0,
+      qtyPassed: formData.qtyPassed || 0,
+      qtyFailed: formData.qtyFailed || 0,
+      inspectorName: "Current User", // Would normally come from auth context
+      createdAt: new Date().toISOString(),
+      status: "completed"
+    };
+    
+    // Get existing inspections and add new one
+    const inspections = JSON.parse(localStorage.getItem('qualitrack_inspections') || '[]');
+    inspections.push(newInspection);
+    localStorage.setItem('qualitrack_inspections', JSON.stringify(inspections));
+    
     return {
       data: {
-        id: Date.now(),
+        id: newInspection.id,
         status: "created",
         message: "Inspection saved successfully with no NCR required.",
         ncr: null
