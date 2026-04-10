@@ -1,6 +1,6 @@
 import { useAuth } from "../contexts/AuthContext";
 
-function AppShell({ children, currentUser }) {
+function AppShell({ children, currentUser, currentPage, setCurrentPage }) {
   const { logout } = useAuth();
 
   async function handleLogout() {
@@ -10,6 +10,28 @@ function AppShell({ children, currentUser }) {
       console.error("Logout error:", error);
     }
   }
+
+  function getHeroContent() {
+    switch (currentPage) {
+      case "incoming":
+        return {
+          title: "Incoming Quality Control",
+          description: "Capture supplier inspections, keep failed stock visible, and raise an NCR in the same workflow."
+        };
+      case "ncr":
+        return {
+          title: "Non-Conformance Report (NCR)",
+          description: "Document and track quality issues, root causes, and corrective actions."
+        };
+      default:
+        return {
+          title: "QualiTrack",
+          description: "Quality Management System"
+        };
+    }
+  }
+
+  const heroContent = getHeroContent();
 
   return (
     <main className="app-shell">
@@ -24,13 +46,58 @@ function AppShell({ children, currentUser }) {
         </button>
       </div>
 
+      {/* Navigation */}
+      <nav className="app-navigation" style={{
+        background: "#fff",
+        padding: "1rem",
+        borderBottom: "1px solid #e9ecef",
+        marginBottom: "2rem"
+      }}>
+        <div style={{
+          display: "flex",
+          gap: "1rem",
+          maxWidth: "1200px",
+          margin: "0 auto"
+        }}>
+          <button
+            className={currentPage === "incoming" ? "nav-button active" : "nav-button"}
+            onClick={() => setCurrentPage("incoming")}
+            style={{
+              padding: "0.5rem 1rem",
+              border: "1px solid #dee2e6",
+              borderRadius: "4px",
+              background: currentPage === "incoming" ? "#007bff" : "#fff",
+              color: currentPage === "incoming" ? "#fff" : "#495057",
+              cursor: "pointer",
+              transition: "all 0.2s ease"
+            }}
+          >
+            Incoming QC
+          </button>
+          <button
+            className={currentPage === "ncr" ? "nav-button active" : "nav-button"}
+            onClick={() => setCurrentPage("ncr")}
+            style={{
+              padding: "0.5rem 1rem",
+              border: "1px solid #dee2e6",
+              borderRadius: "4px",
+              background: currentPage === "ncr" ? "#007bff" : "#fff",
+              color: currentPage === "ncr" ? "#fff" : "#495057",
+              cursor: "pointer",
+              transition: "all 0.2s ease"
+            }}
+          >
+            NCR Form
+          </button>
+        </div>
+      </nav>
+
       <section className="hero">
         <article className="hero-card">
           <span className="eyebrow">QualiTrack MVP</span>
-          <h1>Incoming Quality Control</h1>
+          <h1>{heroContent.title}</h1>
           <p>
-            Capture supplier inspections, keep failed stock visible, and raise an NCR in the
-            same workflow. This scaffold is designed to grow into a multi-module quality
+            {heroContent.description} This scaffold is designed to grow into a multi-module quality
             management platform.
           </p>
         </article>
