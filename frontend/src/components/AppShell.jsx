@@ -1,6 +1,9 @@
+import { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import SidebarMenu from "./SidebarMenu";
 
 function AppShell({ children, currentUser, currentPage, setCurrentPage }) {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const { logout } = useAuth();
 
   async function handleLogout() {
@@ -62,52 +65,95 @@ function AppShell({ children, currentUser, currentPage, setCurrentPage }) {
           display: "flex",
           gap: "1rem",
           maxWidth: "1200px",
-          margin: "0 auto"
+          margin: "0 auto",
+          alignItems: "center",
+          justifyContent: "space-between"
         }}>
+          <div style={{display: "flex", gap: "1rem"}}>
+            <button
+              className={currentPage === "receiving" ? "nav-button active" : "nav-button"}
+              onClick={() => setCurrentPage("receiving")}
+              style={{
+                padding: "0.5rem 1rem",
+                border: "1px solid #dee2e6",
+                borderRadius: "4px",
+                background: currentPage === "receiving" ? "#007bff" : "#fff",
+                color: currentPage === "receiving" ? "#fff" : "#495057",
+                cursor: "pointer",
+                transition: "all 0.2s ease"
+              }}
+            >
+              Receiving Inspection
+            </button>
+            <button
+              className={currentPage === "internal" ? "nav-button active" : "nav-button"}
+              onClick={() => setCurrentPage("internal")}
+              style={{
+                padding: "0.5rem 1rem",
+                border: "1px solid #dee2e6",
+                borderRadius: "4px",
+                background: currentPage === "internal" ? "#007bff" : "#fff",
+                color: currentPage === "internal" ? "#fff" : "#495057",
+                cursor: "pointer",
+                transition: "all 0.2s ease"
+              }}
+            >
+              Internal Inspection
+            </button>
+            <button
+              className={currentPage === "ncr" ? "nav-button active" : "nav-button"}
+              onClick={() => setCurrentPage("ncr")}
+              style={{
+                padding: "0.5rem 1rem",
+                border: "1px solid #dee2e6",
+                borderRadius: "4px",
+                background: currentPage === "ncr" ? "#007bff" : "#fff",
+                color: currentPage === "ncr" ? "#fff" : "#495057",
+                cursor: "pointer",
+                transition: "all 0.2s ease"
+              }}
+            >
+              NCR Form
+            </button>
+          </div>
+          
+          {/* Hamburger Menu Button */}
           <button
-            className={currentPage === "receiving" ? "nav-button active" : "nav-button"}
-            onClick={() => setCurrentPage("receiving")}
+            onClick={() => setSidebarOpen(true)}
             style={{
-              padding: "0.5rem 1rem",
+              padding: "0.5rem",
               border: "1px solid #dee2e6",
               borderRadius: "4px",
-              background: currentPage === "receiving" ? "#007bff" : "#fff",
-              color: currentPage === "receiving" ? "#fff" : "#495057",
+              background: "#fff",
+              color: "#495057",
               cursor: "pointer",
-              transition: "all 0.2s ease"
+              transition: "all 0.2s ease",
+              display: "flex",
+              flexDirection: "column",
+              gap: "3px",
+              justifyContent: "center",
+              width: "40px",
+              height: "40px"
             }}
           >
-            Receiving Inspection
-          </button>
-          <button
-            className={currentPage === "internal" ? "nav-button active" : "nav-button"}
-            onClick={() => setCurrentPage("internal")}
-            style={{
-              padding: "0.5rem 1rem",
-              border: "1px solid #dee2e6",
-              borderRadius: "4px",
-              background: currentPage === "internal" ? "#007bff" : "#fff",
-              color: currentPage === "internal" ? "#fff" : "#495057",
-              cursor: "pointer",
+            <div style={{
+              width: "20px",
+              height: "2px",
+              background: "#495057",
               transition: "all 0.2s ease"
-            }}
-          >
-            Internal Inspection
-          </button>
-          <button
-            className={currentPage === "ncr" ? "nav-button active" : "nav-button"}
-            onClick={() => setCurrentPage("ncr")}
-            style={{
-              padding: "0.5rem 1rem",
-              border: "1px solid #dee2e6",
-              borderRadius: "4px",
-              background: currentPage === "ncr" ? "#007bff" : "#fff",
-              color: currentPage === "ncr" ? "#fff" : "#495057",
-              cursor: "pointer",
+            }}></div>
+            <div style={{
+              width: "20px",
+              height: "2px",
+              background: "#495057",
               transition: "all 0.2s ease"
-            }}
-          >
-            NCR Form
+            }}></div>
+            <div style={{
+              width: "20px",
+              height: "2px",
+              background: "#495057",
+              transition: "all 0.2s ease"
+            }}></div>
           </button>
         </div>
       </nav>
@@ -117,24 +163,20 @@ function AppShell({ children, currentUser, currentPage, setCurrentPage }) {
           <span className="eyebrow">QualiTrack MVP</span>
           <h1>{heroContent.title}</h1>
           <p>
-            {heroContent.description} This scaffold is designed to grow into a multi-module quality
-            management platform.
+            {heroContent.description}
           </p>
         </article>
-
-        <div className="hero-grid">
-          <article className="hero-card metric-card">
-            <strong>Traceability first</strong>
-            <span>PO number, part number, supplier, and inspector stay linked from day one.</span>
-          </article>
-          <article className="hero-card metric-card">
-            <strong>Enterprise-ready flow</strong>
-            <span>Validation, PostgreSQL constraints, and NCR automation are already planned in.</span>
-          </article>
-        </div>
       </section>
 
       {children}
+      
+      {/* Sidebar Menu */}
+      <SidebarMenu
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        currentPage={currentPage}
+        setCurrentPage={setCurrentPage}
+      />
     </main>
   );
 }

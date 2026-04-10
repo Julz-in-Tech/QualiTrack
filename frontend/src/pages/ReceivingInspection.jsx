@@ -243,9 +243,49 @@ function ReceivingInspection() {
 
       const data = await createIncomingQC(qcData);
 
+      // Check for failed items and create NCRs automatically
+      const failedItems = items.filter(item => parseInt(item.qtyBad) > 0);
+      let ncrMessage = "";
+      
+      if (failedItems.length > 0) {
+        try {
+          // Create NCRs for failed items
+          const ncrPromises = failedItems.map(item => {
+            const ncrData = {
+              incidentType: "SUPPLIER",
+              recipientCompanyName: `Supplier ${form.supplierId}`,
+              incidentDate: form.deliveryDate || new Date().toISOString().split('T')[0],
+              incidentNumber: `ME-SCF-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
+              orderReference: form.poNumber,
+              initiatorReporter: "Current User",
+              initiatorCompanyName: "QualiTrack Company",
+              affectedDepartment: "PRODUCTION",
+              reportDate: new Date().toISOString().split('T')[0],
+              productNumber: item.partNumber,
+              productDescription: item.description,
+              partNumber: item.partNumber,
+              partDescription: item.description,
+              serialUidBatch: item.serialNumbers,
+              affectedQuantity: item.qtyBad,
+              nonConformanceDescription: `Item ${item.partNumber} failed receiving inspection. ${item.qtyBad} out of ${item.qtyReceived} units were rejected.`,
+              desiredOutcome: "Replace failed items with conforming products",
+              rootCauseAnalysis: "Receiving inspection revealed non-conformance to specifications",
+              correctivePreventiveActions: "Return failed items to supplier and implement additional quality checks"
+            };
+
+            return createIncomingQC(ncrData);
+          });
+
+          await Promise.all(ncrPromises);
+          ncrMessage = ` Also created ${failedItems.length} NCR(s) for failed items.`;
+        } catch (ncrError) {
+          ncrMessage = ` Warning: Failed to create automatic NCRs: ${ncrError.message}`;
+        }
+      }
+
       setMessage({
         type: "success",
-        text: `Receiving inspection saved successfully. Overall failure rate: ${calculateFailureRate()}%`,
+        text: `Receiving inspection saved successfully. Overall failure rate: ${calculateFailureRate()}%.${ncrMessage}`,
       });
 
       // Reset form
@@ -272,6 +312,14 @@ function ReceivingInspection() {
   const totalFailed = summary.stats.total_failed ?? 0;
   const filteredInspections = getFilteredInspections();
   const productTrends = getProductTrends();
+
+  // Calculate monthly data
+  const currentMonth = new Date().getMonth();
+  const currentYear = new Date().getFullYear();
+  const monthlyInspections = summary.recentInspections.filter(inspection => {
+    const date = new Date(inspection.created_at);
+    return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+  });
 
   return (
     <section className="content-grid">
@@ -835,6 +883,69 @@ function ReceivingInspection() {
         </form>
 
         {message && <div className={`message ${message.type}`}>{message.text}</div>}
+
+        {/* Monthly Inspection Data */}
+        <div style={{
+          background: "#f8f9fa",
+          padding: "15px",
+          borderRadius: "4px",
+          marginTop: "20px"
+        }}>
+          <h4>Monthly Inspection Data</h4>
+          <div style={{display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "15px"}}>
+            <div style={{
+              border: "1px solid #ddd",
+              borderRadius: "4px",
+              padding: "10px",
+              background: "white",
+              textAlign: "center"
+            }}>
+              <div style={{fontSize: "24px", fontWeight: "bold", color: "#007bff"}}>
+                {monthlyInspections.length}
+              </div>
+              <div style={{fontSize: "12px", color: "#666"}}>
+                Receiving Inspections Completed
+              </div>
+              <div style={{fontSize: "10px", color: "#999", marginTop: "5px"}}>
+                This month
+              </div>
+            </div>
+            <div style={{
+              border: "1px solid #ddd",
+              borderRadius: "4px",
+              padding: "10px",
+              background: "white",
+              textAlign: "center"
+            }}>
+              <div style={{fontSize: "24px", fontWeight: "bold", color: "#28a745"}}>
+                {monthlyInspections.filter(i => (i.qty_passed || 0) > 0).length}
+              </div>
+              <div style={{fontSize: "12px", color: "#666"}}>
+                Items Passed Inspection
+              </div>
+              <div style={{fontSize: "10px", color: "#999", marginTop: "5px"}}>
+                This month
+              </div>
+            </div>
+            <div style={{
+              border: "1px solid #ddd",
+              borderRadius: "4px",
+              padding: "10px",
+              background: "white",
+              textAlign: "center"
+            }}>
+              <div style={{fontSize: "24px", fontWeight: "bold", color: "#dc3545"}}>
+                {monthlyInspections.filter(i => (i.qty_failed || 0) > 0).length}
+              </div>
+              <div style={{fontSize: "12px", color: "#666"}}>
+                Items Failed Inspection
+              </div>
+              <div style={{fontSize: "10px", color: "#999", marginTop: "5px"}}>
+                This month
+              </div>
+            </div>
+          </div>
+        </div>
       </article>
 
       {/* Recent Inspections with Filtering */}
