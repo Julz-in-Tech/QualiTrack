@@ -10,6 +10,19 @@ const initialForm = {
   qtyFailed: "0",
   inspectorId: "2",
   comments: "",
+  deliveryDate: "",
+  items: []
+};
+
+const initialItem = {
+  partNumber: "",
+  description: "",
+  qtyOrdered: "",
+  qtyReceived: "",
+  qtyGood: "",
+  qtyBad: "",
+  serialNumbers: "",
+  location: ""
 };
 
 function formatStatus(status) {
@@ -47,6 +60,9 @@ function IncomingQC() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [message, setMessage] = useState(null);
+  const [showItemForm, setShowItemForm] = useState(false);
+  const [currentItem, setCurrentItem] = useState(initialItem);
+  const [items, setItems] = useState([]);
 
   async function loadSummary() {
     try {
@@ -73,24 +89,113 @@ function IncomingQC() {
     setForm((current) => ({
       ...current,
       [name]: value,
-      // Business Logic: Automatically balance quantities to prevent validation errors
+    }));
+  }
+
+  function updateItemField(event) {
+    const { name, value } = event.target;
+
+    setCurrentItem((current) => ({
+      ...current,
+      [name]: value,
+      // Auto-calculate good/bad quantities
       ...(name === "qtyReceived" && {
-        qtyPassed: value,
-        qtyFailed: "0",
+        qtyGood: value,
+        qtyBad: "0",
       }),
-      ...(name === "qtyFailed" && {
-        qtyPassed: Math.max(
+      ...(name === "qtyBad" && {
+        qtyGood: Math.max(
           0,
           (parseInt(current.qtyReceived, 10) || 0) - (parseInt(value, 10) || 0)
         ).toString(),
       }),
-      ...(name === "qtyPassed" && {
-        qtyFailed: Math.max(
+      ...(name === "qtyGood" && {
+        qtyBad: Math.max(
           0,
           (parseInt(current.qtyReceived, 10) || 0) - (parseInt(value, 10) || 0)
         ).toString(),
       }),
     }));
+  }
+
+  function addItem() {
+    const newItem = {
+      ...currentItem,
+      id: Date.now(),
+    };
+    
+    setItems([...items, newItem]);
+    setCurrentItem(initialItem);
+    setShowItemForm(false);
+    
+    // Update form totals
+    const newItems = [...items, newItem];
+    const totalGood = newItems.reduce((sum, item) => sum + (parseInt(item.qtyGood) || 0), 0);
+    const totalBad = newItems.reduce((sum, item) => sum + (parseInt(item.qtyBad) || 0), 0);
+    
+    setForm(prev => ({
+      ...prev,
+      qtyReceived: (totalGood + totalBad).toString(),
+      qtyPassed: totalGood.toString(),
+      qtyFailed: totalBad.toString(),
+    }));
+  }
+
+  function removeItem(itemId) {
+    const updatedItems = items.filter(item => item.id !== itemId);
+    setItems(updatedItems);
+    
+    // Recalculate totals
+    const totalGood = updatedItems.reduce((sum, item) => sum + (parseInt(item.qtyGood) || 0), 0);
+    const totalBad = updatedItems.reduce((sum, item) => sum + (parseInt(item.qtyBad) || 0), 0);
+    
+    setForm(prev => ({
+      ...prev,
+      qtyReceived: (totalGood + totalBad).toString(),
+      qtyPassed: totalGood.toString(),
+      qtyFailed: totalBad.toString(),
+    }));
+  }
+
+  function createNCRForFailedItems() {
+    const failedItems = items.filter(item => parseInt(item.qtyBad) > 0);
+    
+    if (failedItems.length === 0) {
+      setMessage({
+        type: "error",
+        text: "No failed items found to create NCR for"
+      });
+      return;
+    }
+
+    // Create NCR for each failed item
+    const ncrPromises = failedItems.map(item => {
+      const ncrData = {
+        incidentType: "SUPPLIER",
+        recipientCompanyName: `Supplier ${form.supplierId}`,
+        incidentDate: form.deliveryDate || new Date().toISOString().split('T')[0],
+        incidentNumber: `ME-SCF-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
+        orderReference: form.poNumber,
+        initiatorReporter: "Current User",
+        initiatorCompanyName: "QualiTrack Company",
+        affectedDepartment: "PRODUCTION",
+        reportDate: new Date().toISOString().split('T')[0],
+        productNumber: item.partNumber,
+        productDescription: item.description,
+        partNumber: item.partNumber,
+        partDescription: item.description,
+        serialUidBatch: item.serialNumbers,
+        affectedQuantity: item.qtyBad,
+        nonConformanceDescription: `Item ${item.partNumber} failed QC inspection. ${item.qtyBad} out of ${item.qtyReceived} units were rejected.`,
+        desiredOutcome: "Replace failed items with conforming products",
+        rootCauseAnalysis: "Quality control inspection revealed non-conformance to specifications",
+        correctivePreventiveActions: "Return failed items to supplier and implement additional quality checks"
+      };
+
+      return createIncomingQC(ncrData);
+    });
+
+    return Promise.all(ncrPromises);
   }
 
   async function handleSubmit(event) {
@@ -99,14 +204,18 @@ function IncomingQC() {
     setMessage(null);
 
     try {
-      const data = await createIncomingQC({
+      // Save QC inspection with items
+      const qcData = {
         ...form,
+        items: items,
         qtyReceived: Number(form.qtyReceived),
         qtyPassed: Number(form.qtyPassed),
         qtyFailed: Number(form.qtyFailed),
         supplierId: Number(form.supplierId),
         inspectorId: Number(form.inspectorId),
-      });
+      };
+
+      const data = await createIncomingQC(qcData);
 
       setMessage({
         type: "success",
@@ -115,8 +224,27 @@ function IncomingQC() {
           : "Inspection saved successfully with no NCR required.",
       });
 
+      // Reset form
       setForm(initialForm);
+      setItems([]);
       await loadSummary();
+      
+      // Check if there are failed items and create NCRs automatically
+      const failedItems = items.filter(item => parseInt(item.qtyBad) > 0);
+      if (failedItems.length > 0) {
+        try {
+          await createNCRForFailedItems();
+          setMessage(prev => ({
+            ...prev,
+            text: `${prev.text} Also created ${failedItems.length} NCR(s) for failed items.`
+          }));
+        } catch (ncrError) {
+          setMessage(prev => ({
+            ...prev,
+            text: `${prev.text} Warning: Failed to create automatic NCRs: ${ncrError.message}`
+          }));
+        }
+      }
     } catch (error) {
       // Extract backend error messages if available
       const serverMessage = error.response?.data?.message || error.message;
@@ -238,24 +366,39 @@ function IncomingQC() {
               required
             />
           </div>
+            type="number"
+            min="0"
+            value={form.qtyReceived}
+            onChange={updateField}
+            required
+          />
+        </div>
 
-          <div className="field full">
-            <label htmlFor="qtyFailed">Quantity Failed</label>
-            <input
-              id="qtyFailed"
-              name="qtyFailed"
-              type="number"
-              min="0"
-              value={form.qtyFailed}
-              onChange={updateField}
-              required
-            />
-          </div>
+        <div className="field">
+          <label htmlFor="qtyPassed">Quantity Passed</label>
+          <input
+            id="qtyPassed"
+            name="qtyPassed"
+            type="number"
+            min="0"
+            value={form.qtyPassed}
+            onChange={updateField}
+            required
+          />
+        </div>
 
-          <div className="field full">
-            <label htmlFor="comments">Inspection Notes</label>
-            <textarea
-              id="comments"
+        <div className="field full">
+          <label htmlFor="qtyFailed">Quantity Failed</label>
+          <input
+            id="qtyFailed"
+            name="qtyFailed"
+            type="number"
+            min="0"
+            value={form.qtyFailed}
+            onChange={updateField}
+            required
+          />
+        </div>
               name="comments"
               rows="5"
               value={form.comments}
@@ -269,56 +412,55 @@ function IncomingQC() {
               {isSubmitting ? "Saving inspection..." : "Submit Incoming QC"}
             </button>
             <span className="subtle">
-              If the failed quantity is greater than 0, the backend automatically creates a linked NCR.
+              If failed quantity is greater than 0, backend automatically creates a linked NCR.
             </span>
           </div>
         </form>
 
-        {message ? <div className={`message ${message.type}`}>{message.text}</div> : null}
-      </article>
+        {message && <div className={`message ${message.type}`}>{message.text}</div>}
 
-      <aside className="panel">
-        <div className="panel-header">
-          <div>
-            <h3>Recent Inspections</h3>
-            <p className="subtle">
-              {summary.stats.accepted_count ?? 0} accepted inspections captured so far.
-            </p>
-          </div>
-        </div>
-
-        <div className="list-card">
-          {isLoading ? (
-            <div className="empty-state">Loading inspection history...</div>
-          ) : summary.recentInspections.length === 0 ? (
-            <div className="empty-state">
-              No inspection data yet. Submit the first incoming QC record to populate the feed.
+        <aside className="panel">
+          <div className="panel-header">
+            <div>
+              <h3>Recent Inspections</h3>
+              <p className="subtle">
+                {summary.stats.accepted_count ?? 0} accepted inspections captured so far.
+              </p>
             </div>
-          ) : (
-            summary.recentInspections.map((inspection) => (
-              <article className="inspection-item" key={inspection.id}>
-                <header>
-                  <div>
-                    <h4>{inspection.po_number}</h4>
-                    <p>{inspection.part_number}</p>
+          </div>
+
+          <div className="list-card">
+            {isLoading ? (
+              <div className="empty-state">Loading inspection history...</div>
+            ) : summary.recentInspections.length === 0 ? (
+              <div className="empty-state">
+                No inspection data yet. Submit first incoming QC record to populate the feed.
+              </div>
+            ) : (
+              summary.recentInspections.map((inspection) => (
+                <article className="inspection-item" key={inspection.id}>
+                  <header>
+                    <div>
+                      <h4>{inspection.po_number}</h4>
+                      <p>{inspection.part_number}</p>
+                    </div>
+                    <span className={`status-pill ${formatStatus(inspection.status)}`}>
+                      {inspection.status}
+                    </span>
+                  </header>
+                  <div className="inspection-details">
+                    <p><strong>Quantity:</strong> {inspection.qty_received} received, {inspection.qty_passed} passed, {inspection.qty_failed} failed</p>
+                    <p><strong>Inspector:</strong> {inspection.inspector_name}</p>
+                    <p><strong>Date:</strong> {formatDate(inspection.created_at)}</p>
                   </div>
-                  <span className={`status-pill ${formatStatus(inspection.status)}`}>
-                    {inspection.status}
-                  </span>
-                </header>
-                <p>Supplier: {inspection.supplier_name}</p>
-                <p>Inspector: {inspection.inspector_name}</p>
-                <p>
-                  Received {inspection.qty_received} / Failed {inspection.qty_failed}
-                </p>
-                <p>{formatDate(inspection.created_at)}</p>
-              </article>
-            ))
-          )}
-        </div>
-      </aside>
+                </article>
+              ))
+            )}
+          </div>
+        </aside>
+      </article>
     </section>
   );
-}
+};
 
 export default IncomingQC;

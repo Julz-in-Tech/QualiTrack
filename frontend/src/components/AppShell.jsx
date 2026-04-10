@@ -13,10 +13,15 @@ function AppShell({ children, currentUser, currentPage, setCurrentPage }) {
 
   function getHeroContent() {
     switch (currentPage) {
-      case "incoming":
+      case "receiving":
         return {
-          title: "Incoming Quality Control",
-          description: "Capture supplier inspections, keep failed stock visible, and raise an NCR in the same workflow."
+          title: "Receiving Inspection",
+          description: "Incoming quality control with barcode tracking and traceability for supplier deliveries."
+        };
+      case "internal":
+        return {
+          title: "Internal Inspection",
+          description: "Internal quality control with traceability to receiving inspections and failure pattern analysis."
         };
       case "ncr":
         return {
@@ -60,19 +65,34 @@ function AppShell({ children, currentUser, currentPage, setCurrentPage }) {
           margin: "0 auto"
         }}>
           <button
-            className={currentPage === "incoming" ? "nav-button active" : "nav-button"}
-            onClick={() => setCurrentPage("incoming")}
+            className={currentPage === "receiving" ? "nav-button active" : "nav-button"}
+            onClick={() => setCurrentPage("receiving")}
             style={{
               padding: "0.5rem 1rem",
               border: "1px solid #dee2e6",
               borderRadius: "4px",
-              background: currentPage === "incoming" ? "#007bff" : "#fff",
-              color: currentPage === "incoming" ? "#fff" : "#495057",
+              background: currentPage === "receiving" ? "#007bff" : "#fff",
+              color: currentPage === "receiving" ? "#fff" : "#495057",
               cursor: "pointer",
               transition: "all 0.2s ease"
             }}
           >
-            Incoming QC
+            Receiving Inspection
+          </button>
+          <button
+            className={currentPage === "internal" ? "nav-button active" : "nav-button"}
+            onClick={() => setCurrentPage("internal")}
+            style={{
+              padding: "0.5rem 1rem",
+              border: "1px solid #dee2e6",
+              borderRadius: "4px",
+              background: currentPage === "internal" ? "#007bff" : "#fff",
+              color: currentPage === "internal" ? "#fff" : "#495057",
+              cursor: "pointer",
+              transition: "all 0.2s ease"
+            }}
+          >
+            Internal Inspection
           </button>
           <button
             className={currentPage === "ncr" ? "nav-button active" : "nav-button"}
