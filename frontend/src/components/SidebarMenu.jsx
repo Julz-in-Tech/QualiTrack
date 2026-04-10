@@ -349,9 +349,32 @@ function SidebarMenu({ isOpen, onClose, currentPage, setCurrentPage }) {
           }}
         >
           <div style={{ padding: "20px" }}>
-            <h3 style={{ margin: "0 0 15px 0", color: "#333", fontSize: "18px" }}>
-              History Options
-            </h3>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "15px" }}>
+              <h3 style={{ margin: "0", color: "#333", fontSize: "18px" }}>
+                History Options
+              </h3>
+              <button
+                onClick={toggleHistory}
+                style={{
+                  background: "none",
+                  border: "none",
+                  fontSize: "20px",
+                  cursor: "pointer",
+                  color: "#666",
+                  width: "28px",
+                  height: "28px",
+                  borderRadius: "50%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  transition: "background 0.2s ease"
+                }}
+                onMouseOver={(e) => e.target.style.background = "#f0f0f0"}
+                onMouseOut={(e) => e.target.style.background = "none"}
+              >
+                ×
+              </button>
+            </div>
             
             {/* History Sub-menu */}
             <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "20px" }}>

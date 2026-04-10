@@ -59,11 +59,7 @@ function ReceivingInspection() {
   const [showItemForm, setShowItemForm] = useState(false);
   const [currentItem, setCurrentItem] = useState(initialItem);
   const [items, setItems] = useState([]);
-  const [dateRange, setDateRange] = useState({
-    startDate: "",
-    endDate: ""
-  });
-  const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
+    const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
 
   async function loadSummary() {
     try {
@@ -92,14 +88,7 @@ function ReceivingInspection() {
     }));
   }
 
-  function updateDateRange(event) {
-    const { name, value } = event.target;
-    setDateRange((current) => ({
-      ...current,
-      [name]: value,
-    }));
-  }
-
+  
   function updateItemField(event) {
     const { name, value } = event.target;
     setCurrentItem((current) => ({
@@ -205,16 +194,7 @@ function ReceivingInspection() {
   }
 
   function getFilteredInspections() {
-    if (!dateRange.startDate && !dateRange.endDate) {
-      return summary.recentInspections;
-    }
-    
-    return summary.recentInspections.filter(inspection => {
-      const inspectionDate = new Date(inspection.created_at);
-      const start = dateRange.startDate ? new Date(dateRange.startDate) : new Date(0);
-      const end = dateRange.endDate ? new Date(dateRange.endDate) : new Date();
-      return inspectionDate >= start && inspectionDate <= end;
-    });
+    return summary.recentInspections;
   }
 
   async function handleSubmit(event) {
@@ -351,51 +331,7 @@ function ReceivingInspection() {
           </div>
         </div>
 
-        {/* Date Range Filter */}
-        <div style={{
-          background: "#f8f9fa",
-          padding: "15px",
-          borderRadius: "4px",
-          marginBottom: "20px"
-        }}>
-          <h4>Filter by Date Range</h4>
-          <div style={{display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: "10px", alignItems: "end"}}>
-            <div>
-              <label>Start Date</label>
-              <input
-                type="date"
-                name="startDate"
-                value={dateRange.startDate}
-                onChange={updateDateRange}
-                style={{width: "100%", padding: "8px", border: "1px solid #ddd", borderRadius: "4px"}}
-              />
-            </div>
-            <div>
-              <label>End Date</label>
-              <input
-                type="date"
-                name="endDate"
-                value={dateRange.endDate}
-                onChange={updateDateRange}
-                style={{width: "100%", padding: "8px", border: "1px solid #ddd", borderRadius: "4px"}}
-              />
-            </div>
-            <button
-              type="button"
-              onClick={() => setDateRange({startDate: "", endDate: ""})}
-              style={{
-                padding: "8px 16px",
-                border: "1px solid #ddd",
-                borderRadius: "4px",
-                background: "#f5f5f5",
-                cursor: "pointer"
-              }}
-            >
-              Clear Filter
-            </button>
-          </div>
-        </div>
-
+        
         {/* Product Trends */}
         {Object.keys(productTrends).length > 0 && (
           <div style={{
@@ -954,7 +890,7 @@ function ReceivingInspection() {
           <div>
             <h3>Recent Receiving Inspections</h3>
             <p className="subtle">
-              {filteredInspections.length} inspections found in selected date range.
+              {filteredInspections.length} inspections found.
             </p>
           </div>
         </div>
