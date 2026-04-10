@@ -32,15 +32,6 @@ export async function fetchIncomingSummary() {
   return request("/qc/incoming/summary");
 }
 
-export async function loginUser(payload) {
-  return request("/auth/login", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
-}
 
 export async function createIncomingQC(payload) {
   return request("/qc/incoming", {

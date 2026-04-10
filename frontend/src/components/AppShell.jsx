@@ -1,15 +1,25 @@
-function AppShell({ children, currentUser, onLogout }) {
+import { useAuth } from "../contexts/AuthContext";
+
+function AppShell({ children, currentUser }) {
+  const { logout } = useAuth();
+
+  async function handleLogout() {
+    try {
+      await logout();
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  }
+
   return (
     <main className="app-shell">
       <div className="app-topbar">
         <div className="user-badge">
-          <strong>{currentUser.fullName}</strong>
-          <span>
-            {currentUser.role} · {currentUser.email}
-          </span>
+          <strong>{currentUser.displayName || currentUser.email}</strong>
+          <span>{currentUser.email}</span>
         </div>
 
-        <button className="secondary-button" type="button" onClick={onLogout}>
+        <button className="secondary-button" type="button" onClick={handleLogout}>
           Logout
         </button>
       </div>

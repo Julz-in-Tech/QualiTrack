@@ -8,7 +8,6 @@ dotenv.config({
 });
 
 const qcRoutes = require("./routes/qcRoutes");
-const authRoutes = require("./routes/authRoutes");
 const { errorHandler, notFoundHandler } = require("./middleware/errorHandler");
 
 const app = express();
@@ -64,7 +63,6 @@ app.get("/api/health", (_req, res) => {
 });
 
 app.use("/api/qc", qcRoutes);
-app.use("/api/auth", authRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

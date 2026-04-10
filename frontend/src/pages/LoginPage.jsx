@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useAuth } from "../contexts/AuthContext";
 
 const demoAccounts = [
   {
@@ -13,7 +14,8 @@ const demoAccounts = [
   },
 ];
 
-function LoginPage({ onLogin }) {
+function LoginPage() {
+  const { login } = useAuth();
   const [form, setForm] = useState({
     email: demoAccounts[0].email,
     password: demoAccounts[0].password,
@@ -44,7 +46,7 @@ function LoginPage({ onLogin }) {
     setMessage(null);
 
     try {
-      await onLogin(form);
+      await login(form.email, form.password);
     } catch (error) {
       setMessage(error.message);
     } finally {
