@@ -15,14 +15,15 @@ function formatDate(value) {
 }
 
 function SidebarMenu({ isOpen, onClose, currentPage, setCurrentPage }) {
-  const [activeTab, setActiveTab] = useState("receiving");
+  const [historyExpanded, setHistoryExpanded] = useState(false);
+  const [activeHistoryTab, setActiveHistoryTab] = useState("receiving");
   const [dateRange, setDateRange] = useState({
     startDate: "",
     endDate: ""
   });
   const [receivingInspections, setReceivingInspections] = useState([]);
   const [internalInspections, setInternalInspections] = useState([]);
-  const [monthlyData, setMonthlyData] = useState({});
+  const [productTrends, setProductTrends] = useState({});
 
   useEffect(() => {
     if (isOpen) {
@@ -46,43 +47,32 @@ function SidebarMenu({ isOpen, onClose, currentPage, setCurrentPage }) {
     setReceivingInspections(receiving);
     setInternalInspections(internal);
     
-    // Calculate monthly data
-    calculateMonthlyData(receiving, internal, ncrs);
-  }
-
-  function calculateMonthlyData(receiving, internal, ncrs) {
-    const currentMonth = new Date().getMonth();
-    const currentYear = new Date().getFullYear();
-    
-    const monthlyReceiving = receiving.filter(inspection => {
-      const date = new Date(inspection.createdAt);
-      return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
-    });
-    
-    const monthlyInternal = internal.filter(inspection => {
-      const date = new Date(inspection.createdAt);
-      return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
-    });
-    
-    const monthlyNCRs = ncrs.filter(ncr => {
-      const date = new Date(ncr.createdAt);
-      return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
-    });
-    
-    setMonthlyData({
-      receiving: {
-        total: monthlyReceiving.length,
-        completed: monthlyReceiving.length
-      },
-      internal: {
-        total: monthlyInternal.length,
-        completed: monthlyInternal.length
-      },
-      ncrs: {
-        total: monthlyNCRs.length,
-        completed: monthlyNCRs.filter(ncr => ncr.status === "COMPLETED").length
+    // Calculate product trends
+    const trends = {};
+    stored.forEach(inspection => {
+      if (inspection.items) {
+        inspection.items.forEach(item => {
+          if (!trends[item.partNumber]) {
+            trends[item.partNumber] = {
+              totalInspections: 0,
+              totalFailed: 0,
+              failureRate: 0
+            };
+          }
+          trends[item.partNumber].totalInspections++;
+          if (parseInt(item.qtyBad) > 0 || item.testResult === "FAIL") {
+            trends[item.partNumber].totalFailed++;
+          }
+        });
       }
     });
+    
+    Object.keys(trends).forEach(partNumber => {
+      const stats = trends[partNumber];
+      stats.failureRate = ((stats.totalFailed / stats.totalInspections) * 100).toFixed(2);
+    });
+    
+    setProductTrends(trends);
   }
 
   function updateDateRange(event) {
@@ -111,6 +101,10 @@ function SidebarMenu({ isOpen, onClose, currentPage, setCurrentPage }) {
     onClose();
   }
 
+  function toggleHistory() {
+    setHistoryExpanded(!historyExpanded);
+  }
+
   const filteredReceiving = getFilteredInspections(receivingInspections);
   const filteredInternal = getFilteredInspections(internalInspections);
 
@@ -137,270 +131,440 @@ function SidebarMenu({ isOpen, onClose, currentPage, setCurrentPage }) {
         style={{
           position: "fixed",
           top: 0,
-          right: isOpen ? "0" : "-400px",
-          width: "400px",
+          right: isOpen ? "0" : "-350px",
+          width: "350px",
           height: "100%",
-          background: "white",
-          boxShadow: "-2px 0 8px rgba(0, 0, 0, 0.1)",
+          background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+          boxShadow: "-4px 0 20px rgba(0, 0, 0, 0.15)",
           transition: "right 0.3s ease",
           zIndex: 1000,
           overflow: "auto"
         }}
       >
-        <div style={{ padding: "20px" }}>
+        <div style={{ padding: "0" }}>
           {/* Header */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-            <h3 style={{ margin: "0" }}>Menu & History</h3>
+          <div style={{ 
+            padding: "25px 20px", 
+            borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center"
+          }}>
+            <div>
+              <h2 style={{ 
+                margin: "0", 
+                color: "white", 
+                fontSize: "20px",
+                fontWeight: "600"
+              }}>
+                QualiTrack Menu
+              </h2>
+              <p style={{ 
+                margin: "5px 0 0 0", 
+                color: "rgba(255, 255, 255, 0.8)",
+                fontSize: "14px"
+              }}>
+                Quality Management System
+              </p>
+            </div>
             <button
               onClick={onClose}
               style={{
-                background: "none",
+                background: "rgba(255, 255, 255, 0.2)",
                 border: "none",
                 fontSize: "24px",
                 cursor: "pointer",
-                color: "#666"
+                color: "white",
+                width: "36px",
+                height: "36px",
+                borderRadius: "50%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                transition: "background 0.2s ease"
               }}
+              onMouseOver={(e) => e.target.style.background = "rgba(255, 255, 255, 0.3)"}
+              onMouseOut={(e) => e.target.style.background = "rgba(255, 255, 255, 0.2)"}
             >
               ×
             </button>
           </div>
 
-          {/* Navigation */}
-          <div style={{ marginBottom: "30px" }}>
-            <h4 style={{ marginBottom: "10px" }}>Navigation</h4>
+          {/* Navigation Menu */}
+          <div style={{ padding: "20px" }}>
             <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              {/* Receiving Inspection */}
               <button
                 onClick={() => handleNavigation("receiving")}
                 style={{
-                  padding: "10px 15px",
-                  border: "1px solid #dee2e6",
-                  borderRadius: "4px",
-                  background: currentPage === "receiving" ? "#007bff" : "#fff",
-                  color: currentPage === "receiving" ? "#fff" : "#495057",
+                  padding: "15px 20px",
+                  border: "none",
+                  borderRadius: "12px",
+                  background: currentPage === "receiving" ? "rgba(255, 255, 255, 0.95)" : "rgba(255, 255, 255, 0.1)",
+                  color: currentPage === "receiving" ? "#667eea" : "white",
                   cursor: "pointer",
-                  textAlign: "left"
+                  textAlign: "left",
+                  fontSize: "16px",
+                  fontWeight: "500",
+                  transition: "all 0.2s ease",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px"
+                }}
+                onMouseOver={(e) => {
+                  if (currentPage !== "receiving") {
+                    e.target.style.background = "rgba(255, 255, 255, 0.2)";
+                  }
+                }}
+                onMouseOut={(e) => {
+                  if (currentPage !== "receiving") {
+                    e.target.style.background = "rgba(255, 255, 255, 0.1)";
+                  }
                 }}
               >
+                <div style={{
+                  width: "8px",
+                  height: "8px",
+                  borderRadius: "50%",
+                  background: currentPage === "receiving" ? "#28a745" : "#28a745"
+                }}></div>
                 Receiving Inspection
               </button>
+
+              {/* Internal Inspection */}
               <button
                 onClick={() => handleNavigation("internal")}
                 style={{
-                  padding: "10px 15px",
-                  border: "1px solid #dee2e6",
-                  borderRadius: "4px",
-                  background: currentPage === "internal" ? "#007bff" : "#fff",
-                  color: currentPage === "internal" ? "#fff" : "#495057",
+                  padding: "15px 20px",
+                  border: "none",
+                  borderRadius: "12px",
+                  background: currentPage === "internal" ? "rgba(255, 255, 255, 0.95)" : "rgba(255, 255, 255, 0.1)",
+                  color: currentPage === "internal" ? "#667eea" : "white",
                   cursor: "pointer",
-                  textAlign: "left"
+                  textAlign: "left",
+                  fontSize: "16px",
+                  fontWeight: "500",
+                  transition: "all 0.2s ease",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px"
+                }}
+                onMouseOver={(e) => {
+                  if (currentPage !== "internal") {
+                    e.target.style.background = "rgba(255, 255, 255, 0.2)";
+                  }
+                }}
+                onMouseOut={(e) => {
+                  if (currentPage !== "internal") {
+                    e.target.style.background = "rgba(255, 255, 255, 0.1)";
+                  }
                 }}
               >
+                <div style={{
+                  width: "8px",
+                  height: "8px",
+                  borderRadius: "50%",
+                  background: currentPage === "internal" ? "#ffc107" : "#ffc107"
+                }}></div>
                 Internal Inspection
               </button>
+
+              {/* NCR Form */}
               <button
                 onClick={() => handleNavigation("ncr")}
                 style={{
-                  padding: "10px 15px",
-                  border: "1px solid #dee2e6",
-                  borderRadius: "4px",
-                  background: currentPage === "ncr" ? "#007bff" : "#fff",
-                  color: currentPage === "ncr" ? "#fff" : "#495057",
+                  padding: "15px 20px",
+                  border: "none",
+                  borderRadius: "12px",
+                  background: currentPage === "ncr" ? "rgba(255, 255, 255, 0.95)" : "rgba(255, 255, 255, 0.1)",
+                  color: currentPage === "ncr" ? "#667eea" : "white",
                   cursor: "pointer",
-                  textAlign: "left"
+                  textAlign: "left",
+                  fontSize: "16px",
+                  fontWeight: "500",
+                  transition: "all 0.2s ease",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px"
+                }}
+                onMouseOver={(e) => {
+                  if (currentPage !== "ncr") {
+                    e.target.style.background = "rgba(255, 255, 255, 0.2)";
+                  }
+                }}
+                onMouseOut={(e) => {
+                  if (currentPage !== "ncr") {
+                    e.target.style.background = "rgba(255, 255, 255, 0.1)";
+                  }
                 }}
               >
+                <div style={{
+                  width: "8px",
+                  height: "8px",
+                  borderRadius: "50%",
+                  background: currentPage === "ncr" ? "#dc3545" : "#dc3545"
+                }}></div>
                 NCR Form
               </button>
-            </div>
-          </div>
 
-          {/* Monthly Summary */}
-          <div style={{
-            background: "#f8f9fa",
-            padding: "15px",
-            borderRadius: "4px",
-            marginBottom: "20px"
-          }}>
-            <h4 style={{ marginTop: "0", marginBottom: "15px" }}>Monthly Summary</h4>
-            <div style={{display: "grid", gridTemplateColumns: "1fr", gap: "10px"}}>
-              <div>
-                <strong>Receiving Inspections</strong>
-                <div>{monthlyData.receiving?.completed || 0} completed this month</div>
-              </div>
-              <div>
-                <strong>Internal Inspections</strong>
-                <div>{monthlyData.internal?.completed || 0} completed this month</div>
-              </div>
-              <div>
-                <strong>NCR Reports</strong>
-                <div>{monthlyData.ncrs?.total || 0} created this month</div>
-              </div>
-            </div>
-          </div>
+              {/* History Section */}
+              <div style={{ marginTop: "20px" }}>
+                <button
+                  onClick={toggleHistory}
+                  style={{
+                    padding: "15px 20px",
+                    border: "none",
+                    borderRadius: "12px",
+                    background: historyExpanded ? "rgba(255, 255, 255, 0.95)" : "rgba(255, 255, 255, 0.1)",
+                    color: historyExpanded ? "#667eea" : "white",
+                    cursor: "pointer",
+                    textAlign: "left",
+                    fontSize: "16px",
+                    fontWeight: "500",
+                    transition: "all 0.2s ease",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "12px",
+                    width: "100%"
+                  }}
+                  onMouseOver={(e) => {
+                    if (!historyExpanded) {
+                      e.target.style.background = "rgba(255, 255, 255, 0.2)";
+                    }
+                  }}
+                  onMouseOut={(e) => {
+                    if (!historyExpanded) {
+                      e.target.style.background = "rgba(255, 255, 255, 0.1)";
+                    }
+                  }}
+                >
+                  <div style={{
+                    width: "8px",
+                    height: "8px",
+                    borderRadius: "50%",
+                    background: "#17a2b8"
+                  }}></div>
+                  <span>History</span>
+                  <span style={{ marginLeft: "auto", fontSize: "12px" }}>
+                    {historyExpanded ? "×" : "+"}
+                  </span>
+                </button>
 
-          {/* Date Range Filter */}
-          <div style={{
-            background: "#f8f9fa",
-            padding: "15px",
-            borderRadius: "4px",
-            marginBottom: "20px"
-          }}>
-            <h4 style={{ marginTop: "0", marginBottom: "15px" }}>Filter by Date Range</h4>
-            <div style={{display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "10px"}}>
-              <div>
-                <label style={{fontSize: "12px", color: "#666"}}>Start Date</label>
-                <input
-                  type="date"
-                  name="startDate"
-                  value={dateRange.startDate}
-                  onChange={updateDateRange}
-                  style={{width: "100%", padding: "8px", border: "1px solid #ddd", borderRadius: "4px"}}
-                />
+                {/* History Sub-menu */}
+                {historyExpanded && (
+                  <div style={{ 
+                    marginLeft: "20px", 
+                    marginTop: "8px",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "6px"
+                  }}>
+                    <button
+                      onClick={() => setActiveHistoryTab("receiving")}
+                      style={{
+                        padding: "12px 16px",
+                        border: "none",
+                        borderRadius: "8px",
+                        background: activeHistoryTab === "receiving" ? "rgba(255, 255, 255, 0.9)" : "rgba(255, 255, 255, 0.05)",
+                        color: activeHistoryTab === "receiving" ? "#667eea" : "rgba(255, 255, 255, 0.9)",
+                        cursor: "pointer",
+                        textAlign: "left",
+                        fontSize: "14px",
+                        transition: "all 0.2s ease"
+                      }}
+                    >
+                      Receiving Inspection History
+                    </button>
+                    <button
+                      onClick={() => setActiveHistoryTab("internal")}
+                      style={{
+                        padding: "12px 16px",
+                        border: "none",
+                        borderRadius: "8px",
+                        background: activeHistoryTab === "internal" ? "rgba(255, 255, 255, 0.9)" : "rgba(255, 255, 255, 0.05)",
+                        color: activeHistoryTab === "internal" ? "#667eea" : "rgba(255, 255, 255, 0.9)",
+                        cursor: "pointer",
+                        textAlign: "left",
+                        fontSize: "14px",
+                        transition: "all 0.2s ease"
+                      }}
+                    >
+                      Internal Inspection History
+                    </button>
+                    <button
+                      onClick={() => setActiveHistoryTab("product")}
+                      style={{
+                        padding: "12px 16px",
+                        border: "none",
+                        borderRadius: "8px",
+                        background: activeHistoryTab === "product" ? "rgba(255, 255, 255, 0.9)" : "rgba(255, 255, 255, 0.05)",
+                        color: activeHistoryTab === "product" ? "#667eea" : "rgba(255, 255, 255, 0.9)",
+                        cursor: "pointer",
+                        textAlign: "left",
+                        fontSize: "14px",
+                        transition: "all 0.2s ease"
+                      }}
+                    >
+                      Product History
+                    </button>
+                  </div>
+                )}
               </div>
-              <div>
-                <label style={{fontSize: "12px", color: "#666"}}>End Date</label>
-                <input
-                  type="date"
-                  name="endDate"
-                  value={dateRange.endDate}
-                  onChange={updateDateRange}
-                  style={{width: "100%", padding: "8px", border: "1px solid #ddd", borderRadius: "4px"}}
-                />
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => setDateRange({startDate: "", endDate: ""})}
-              style={{
-                padding: "6px 12px",
-                border: "1px solid #ddd",
-                borderRadius: "4px",
-                background: "#f5f5f5",
-                cursor: "pointer",
-                fontSize: "12px"
-              }}
-            >
-              Clear Filter
-            </button>
-          </div>
-
-          {/* History Tabs */}
-          <div>
-            <h4 style={{ marginBottom: "10px" }}>Inspection History</h4>
-            <div style={{display: "flex", gap: "8px", marginBottom: "15px"}}>
-              <button
-                onClick={() => setActiveTab("receiving")}
-                style={{
-                  padding: "6px 12px",
-                  border: "1px solid #dee2e6",
-                  borderRadius: "4px",
-                  background: activeTab === "receiving" ? "#007bff" : "#fff",
-                  color: activeTab === "receiving" ? "#fff" : "#495057",
-                  cursor: "pointer",
-                  fontSize: "12px"
-                }}
-              >
-                Receiving ({filteredReceiving.length})
-              </button>
-              <button
-                onClick={() => setActiveTab("internal")}
-                style={{
-                  padding: "6px 12px",
-                  border: "1px solid #dee2e6",
-                  borderRadius: "4px",
-                  background: activeTab === "internal" ? "#007bff" : "#fff",
-                  color: activeTab === "internal" ? "#fff" : "#495057",
-                  cursor: "pointer",
-                  fontSize: "12px"
-                }}
-              >
-                Internal ({filteredInternal.length})
-              </button>
             </div>
 
             {/* History Content */}
-            <div style={{maxHeight: "300px", overflow: "auto"}}>
-              {activeTab === "receiving" && (
-                <div>
-                  {filteredReceiving.length === 0 ? (
-                    <div style={{textAlign: "center", color: "#666", padding: "20px"}}>
-                      No receiving inspections found
-                    </div>
-                  ) : (
-                    filteredReceiving.map(inspection => (
-                      <div key={inspection.id} style={{
-                        border: "1px solid #ddd",
-                        borderRadius: "4px",
-                        padding: "10px",
-                        marginBottom: "8px"
-                      }}>
-                        <div style={{display: "flex", justifyContent: "space-between", alignItems: "center"}}>
-                          <div>
-                            <strong style={{fontSize: "14px"}}>{inspection.poNumber}</strong>
-                            <div style={{fontSize: "11px", color: "#666"}}>
-                              {formatDate(inspection.createdAt)}
-                            </div>
-                            <div style={{fontSize: "11px", color: "#666"}}>
-                              Items: {inspection.items?.length || 0}
-                            </div>
-                          </div>
-                          <div style={{textAlign: "right"}}>
-                            <div style={{fontSize: "11px", color: "#666"}}>
-                              Received: {inspection.qtyReceived || 0}
-                            </div>
-                            <div style={{fontSize: "11px", color: "#28a745"}}>
-                              Passed: {inspection.qtyPassed || 0}
-                            </div>
-                            <div style={{fontSize: "11px", color: "#dc3545"}}>
-                              Failed: {inspection.qtyFailed || 0}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  )}
+            {historyExpanded && (
+              <div style={{
+                marginTop: "20px",
+                padding: "16px",
+                background: "rgba(255, 255, 255, 0.1)",
+                borderRadius: "12px",
+                maxHeight: "400px",
+                overflow: "auto"
+              }}>
+                {/* Date Range Filter */}
+                <div style={{ marginBottom: "15px" }}>
+                  <label style={{ color: "white", fontSize: "12px", display: "block", marginBottom: "8px" }}>
+                    Filter by Date Range
+                  </label>
+                  <div style={{display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "8px"}}>
+                    <input
+                      type="date"
+                      name="startDate"
+                      value={dateRange.startDate}
+                      onChange={updateDateRange}
+                      style={{
+                        width: "100%", 
+                        padding: "8px", 
+                        border: "1px solid rgba(255, 255, 255, 0.3)", 
+                        borderRadius: "6px",
+                        background: "rgba(255, 255, 255, 0.9)",
+                        fontSize: "12px"
+                      }}
+                    />
+                    <input
+                      type="date"
+                      name="endDate"
+                      value={dateRange.endDate}
+                      onChange={updateDateRange}
+                      style={{
+                        width: "100%", 
+                        padding: "8px", 
+                        border: "1px solid rgba(255, 255, 255, 0.3)", 
+                        borderRadius: "6px",
+                        background: "rgba(255, 255, 255, 0.9)",
+                        fontSize: "12px"
+                      }}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setDateRange({startDate: "", endDate: ""})}
+                    style={{
+                      padding: "6px 12px",
+                      border: "1px solid rgba(255, 255, 255, 0.3)",
+                      borderRadius: "6px",
+                      background: "rgba(255, 255, 255, 0.2)",
+                      color: "white",
+                      cursor: "pointer",
+                      fontSize: "12px"
+                    }}
+                  >
+                    Clear Filter
+                  </button>
                 </div>
-              )}
 
-              {activeTab === "internal" && (
+                {/* History List */}
                 <div>
-                  {filteredInternal.length === 0 ? (
-                    <div style={{textAlign: "center", color: "#666", padding: "20px"}}>
-                      No internal inspections found
-                    </div>
-                  ) : (
-                    filteredInternal.map(inspection => (
-                      <div key={inspection.id} style={{
-                        border: "1px solid #ddd",
-                        borderRadius: "4px",
-                        padding: "10px",
-                        marginBottom: "8px"
-                      }}>
-                        <div style={{display: "flex", justifyContent: "space-between", alignItems: "center"}}>
-                          <div>
-                            <strong style={{fontSize: "14px"}}>{inspection.partNumber}</strong>
-                            <div style={{fontSize: "11px", color: "#666"}}>
-                              {formatDate(inspection.createdAt)}
-                            </div>
-                            <div style={{fontSize: "11px", color: "#666"}}>
-                              Test Type: {inspection.testType}
-                            </div>
-                          </div>
-                          <div style={{textAlign: "right"}}>
-                            <div style={{fontSize: "11px", color: "#666"}}>
-                              Tests: {inspection.items?.length || 0}
-                            </div>
-                            <div style={{fontSize: "11px", color: "#dc3545"}}>
-                              Failures: {inspection.items?.filter(item => item.testResult === "FAIL").length || 0}
-                            </div>
-                          </div>
+                  {activeHistoryTab === "receiving" && (
+                    <div>
+                      {filteredReceiving.length === 0 ? (
+                        <div style={{textAlign: "center", color: "rgba(255, 255, 255, 0.7)", padding: "20px"}}>
+                          No receiving inspections found
                         </div>
-                      </div>
-                    ))
+                      ) : (
+                        filteredReceiving.map(inspection => (
+                          <div key={inspection.id} style={{
+                            background: "rgba(255, 255, 255, 0.1)",
+                            borderRadius: "8px",
+                            padding: "12px",
+                            marginBottom: "8px"
+                          }}>
+                            <div style={{color: "white"}}>
+                              <strong style={{fontSize: "14px"}}>{inspection.poNumber}</strong>
+                              <div style={{fontSize: "11px", color: "rgba(255, 255, 255, 0.8)"}}>
+                                {formatDate(inspection.createdAt)}
+                              </div>
+                              <div style={{fontSize: "11px", color: "rgba(255, 255, 255, 0.8)"}}>
+                                Items: {inspection.items?.length || 0} | Passed: {inspection.qtyPassed || 0} | Failed: {inspection.qtyFailed || 0}
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
+
+                  {activeHistoryTab === "internal" && (
+                    <div>
+                      {filteredInternal.length === 0 ? (
+                        <div style={{textAlign: "center", color: "rgba(255, 255, 255, 0.7)", padding: "20px"}}>
+                          No internal inspections found
+                        </div>
+                      ) : (
+                        filteredInternal.map(inspection => (
+                          <div key={inspection.id} style={{
+                            background: "rgba(255, 255, 255, 0.1)",
+                            borderRadius: "8px",
+                            padding: "12px",
+                            marginBottom: "8px"
+                          }}>
+                            <div style={{color: "white"}}>
+                              <strong style={{fontSize: "14px"}}>{inspection.partNumber}</strong>
+                              <div style={{fontSize: "11px", color: "rgba(255, 255, 255, 0.8)"}}>
+                                {formatDate(inspection.createdAt)}
+                              </div>
+                              <div style={{fontSize: "11px", color: "rgba(255, 255, 255, 0.8)"}}>
+                                Test Type: {inspection.testType} | Failures: {inspection.items?.filter(item => item.testResult === "FAIL").length || 0}
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
+
+                  {activeHistoryTab === "product" && (
+                    <div>
+                      {Object.keys(productTrends).length === 0 ? (
+                        <div style={{textAlign: "center", color: "rgba(255, 255, 255, 0.7)", padding: "20px"}}>
+                          No product data available
+                        </div>
+                      ) : (
+                        Object.entries(productTrends).map(([partNumber, stats]) => (
+                          <div key={partNumber} style={{
+                            background: "rgba(255, 255, 255, 0.1)",
+                            borderRadius: "8px",
+                            padding: "12px",
+                            marginBottom: "8px"
+                          }}>
+                            <div style={{color: "white"}}>
+                              <strong style={{fontSize: "14px"}}>{partNumber}</strong>
+                              <div style={{fontSize: "11px", color: "rgba(255, 255, 255, 0.8)"}}>
+                                Inspections: {stats.totalInspections} | Failed: {stats.totalFailed}
+                              </div>
+                              <div style={{fontSize: "11px", color: stats.failureRate > 10 ? "#ff6b6b" : "#51cf66"}}>
+                                Failure Rate: {stats.failureRate}%
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
                   )}
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
