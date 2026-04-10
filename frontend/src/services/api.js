@@ -39,18 +39,47 @@ function getMockData(path) {
   // Mock data for production when backend isn't available
   if (path === "/qc/incoming/summary") {
     return {
-      totalIncoming: 45,
-      pendingReview: 12,
-      completedToday: 8,
-      averageProcessingTime: "2.5 hours"
+      stats: {
+        total_inspections: 45,
+        total_received: 100,
+        total_failed: 5,
+        accepted_count: 40,
+      },
+      recentInspections: [
+        {
+          id: 1,
+          poNumber: "PO-2024-001",
+          partNumber: "PCB-CTRL-001",
+          qtyReceived: 100,
+          qtyPassed: 95,
+          qtyFailed: 5,
+          inspectorName: "John Doe",
+          createdAt: new Date(Date.now() - 3600000).toISOString(),
+          status: "completed"
+        },
+        {
+          id: 2,
+          poNumber: "PO-2024-002", 
+          partNumber: "PCB-CTRL-002",
+          qtyReceived: 50,
+          qtyPassed: 50,
+          qtyFailed: 0,
+          inspectorName: "Jane Smith",
+          createdAt: new Date(Date.now() - 7200000).toISOString(),
+          status: "completed"
+        }
+      ]
     };
   }
   
   if (path === "/qc/incoming") {
     return {
-      id: Date.now(),
-      status: "created",
-      message: "QC record created successfully (mock data)"
+      data: {
+        id: Date.now(),
+        status: "created",
+        message: "Inspection saved successfully with no NCR required.",
+        ncr: null
+      }
     };
   }
 
