@@ -1,4 +1,6 @@
-const API_BASE_URL = window.__QUALITRACK_CONFIG__?.apiUrl || "http://127.0.0.1:5000/api";
+// Detect if we're in production (Vercel) vs development
+const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+const API_BASE_URL = isProduction ? null : (window.__QUALITRACK_CONFIG__?.apiUrl || "http://127.0.0.1:5000/api");
 
 async function readResponse(response) {
   const contentType = response.headers.get("content-type") || "";
@@ -16,6 +18,11 @@ async function readResponse(response) {
 }
 
 async function request(path, options) {
+  // In production, return mock data since backend isn't deployed
+  if (isProduction) {
+    return getMockData(path);
+  }
+
   try {
     const response = await fetch(`${API_BASE_URL}${path}`, options);
     return readResponse(response);
@@ -28,10 +35,31 @@ async function request(path, options) {
   }
 }
 
+function getMockData(path) {
+  // Mock data for production when backend isn't available
+  if (path === "/qc/incoming/summary") {
+    return {
+      totalIncoming: 45,
+      pendingReview: 12,
+      completedToday: 8,
+      averageProcessingTime: "2.5 hours"
+    };
+  }
+  
+  if (path === "/qc/incoming") {
+    return {
+      id: Date.now(),
+      status: "created",
+      message: "QC record created successfully (mock data)"
+    };
+  }
+
+  return null;
+}
+
 export async function fetchIncomingSummary() {
   return request("/qc/incoming/summary");
 }
-
 
 export async function createIncomingQC(payload) {
   return request("/qc/incoming", {
