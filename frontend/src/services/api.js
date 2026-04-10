@@ -39,37 +39,6 @@ function getMockData(path, options = {}) {
   // Mock data for production when backend isn't available
   if (path === "/qc/incoming/summary") {
     // Get stored inspections from localStorage
-    const storedInspections = JSON.parse(localStorage.getItem('qualitrack_inspections') || '[]');
-    
-    // Add sample data if no inspections exist
-    if (storedInspections.length === 0) {
-      const sampleInspections = [
-        {
-          id: 1,
-          poNumber: "PO-2024-001",
-          partNumber: "PCB-CTRL-001",
-          qtyReceived: 100,
-          qtyPassed: 95,
-          qtyFailed: 5,
-          inspectorName: "John Doe",
-          createdAt: new Date(Date.now() - 3600000).toISOString(),
-          status: "completed"
-        },
-        {
-          id: 2,
-          poNumber: "PO-2024-002", 
-          partNumber: "PCB-CTRL-002",
-          qtyReceived: 50,
-          qtyPassed: 50,
-          qtyFailed: 0,
-          inspectorName: "Jane Smith",
-          createdAt: new Date(Date.now() - 7200000).toISOString(),
-          status: "completed"
-        }
-      ];
-      localStorage.setItem('qualitrack_inspections', JSON.stringify(sampleInspections));
-    }
-    
     const inspections = JSON.parse(localStorage.getItem('qualitrack_inspections') || '[]');
     
     // Calculate stats from stored inspections
@@ -96,17 +65,27 @@ function getMockData(path, options = {}) {
     // Parse the request body to get form data
     const formData = JSON.parse(options.body || '{}');
     
-    // Create new inspection record
+    // Create new inspection record with complete data
     const newInspection = {
       id: Date.now(),
-      poNumber: formData.poNumber || "Unknown PO",
-      partNumber: formData.partNumber || "Unknown Part",
+      po_number: formData.poNumber || "Unknown PO",
+      part_number: formData.partNumber || "Unknown Part",
       qtyReceived: formData.qtyReceived || 0,
       qtyPassed: formData.qtyPassed || 0,
       qtyFailed: formData.qtyFailed || 0,
-      inspectorName: "Current User", // Would normally come from auth context
-      createdAt: new Date().toISOString(),
-      status: "completed"
+      inspector_name: "Current User", // Would normally come from auth context
+      created_at: new Date().toISOString(),
+      status: "completed",
+      // Store complete item data with barcodes and details
+      items: formData.items || [],
+      // Store additional fields for traceability
+      supplierId: formData.supplierId,
+      inspectorId: formData.inspectorId,
+      barcode: formData.barcode,
+      comments: formData.comments,
+      deliveryDate: formData.deliveryDate,
+      overallFailureRate: formData.overallFailureRate,
+      productTrends: formData.productTrends
     };
     
     // Get existing inspections and add new one
@@ -124,6 +103,112 @@ function getMockData(path, options = {}) {
     };
   }
 
+  // Handle receiving inspection endpoints
+  if (path === "/qc/receiving/summary") {
+    const inspections = JSON.parse(localStorage.getItem('qualitrack_inspections') || '[]');
+    const receivingInspections = inspections.filter(inspection => 
+      inspection.items && inspection.items.some(item => item.inspectionType === "receiving")
+    );
+    
+    const stats = receivingInspections.reduce((acc, inspection) => {
+      acc.total_inspections += 1;
+      acc.total_received += inspection.qtyReceived || 0;
+      acc.total_failed += inspection.qtyFailed || 0;
+      acc.accepted_count += (inspection.qtyPassed || 0) > 0 ? 1 : 0;
+      return acc;
+    }, {
+      total_inspections: 0,
+      total_received: 0,
+      total_failed: 0,
+      accepted_count: 0,
+    });
+
+    return {
+      stats,
+      recentInspections: receivingInspections.slice(-10).reverse()
+    };
+  }
+  
+  if (path === "/qc/receiving" && options.method === 'POST') {
+    const formData = JSON.parse(options.body || '{}');
+    
+    const newInspection = {
+      id: Date.now(),
+      po_number: formData.poNumber || "Unknown PO",
+      part_number: formData.partNumber || "Unknown Part",
+      qtyReceived: formData.qtyReceived || 0,
+      qtyPassed: formData.qtyPassed || 0,
+      qtyFailed: formData.qtyFailed || 0,
+      inspector_name: "Current User",
+      created_at: new Date().toISOString(),
+      status: "completed",
+      items: formData.items || [],
+      supplierId: formData.supplierId,
+      inspectorId: formData.inspectorId,
+      barcode: formData.barcode,
+      comments: formData.comments,
+      deliveryDate: formData.deliveryDate,
+      overallFailureRate: formData.overallFailureRate,
+      productTrends: formData.productTrends
+    };
+    
+    const inspections = JSON.parse(localStorage.getItem('qualitrack_inspections') || '[]');
+    inspections.push(newInspection);
+    localStorage.setItem('qualitrack_inspections', JSON.stringify(inspections));
+    
+    return { data: { id: newInspection.id, status: "created" } };
+  }
+  
+  // Handle internal inspection endpoints
+  if (path === "/qc/internal/summary") {
+    const inspections = JSON.parse(localStorage.getItem('qualitrack_inspections') || '[]');
+    const internalInspections = inspections.filter(inspection => 
+      inspection.items && inspection.items.some(item => item.inspectionType === "internal")
+    );
+    
+    const stats = internalInspections.reduce((acc, inspection) => {
+      acc.total_inspections += 1;
+      acc.total_received += inspection.qtyReceived || 0;
+      acc.total_failed += inspection.qtyFailed || 0;
+      acc.accepted_count += (inspection.qtyPassed || 0) > 0 ? 1 : 0;
+      return acc;
+    }, {
+      total_inspections: 0,
+      total_received: 0,
+      total_failed: 0,
+      accepted_count: 0,
+    });
+
+    return {
+      stats,
+      recentInspections: internalInspections.slice(-10).reverse()
+    };
+  }
+  
+  if (path === "/qc/internal" && options.method === 'POST') {
+    const formData = JSON.parse(options.body || '{}');
+    
+    const newInspection = {
+      id: Date.now(),
+      po_number: formData.poNumber || "Unknown PO",
+      part_number: formData.partNumber || "Unknown Part",
+      testType: formData.testType || "Unknown Test",
+      inspector_name: "Current User",
+      created_at: new Date().toISOString(),
+      status: "completed",
+      items: formData.items || [],
+      linkedToReceiving: formData.linkedToReceiving || false,
+      receivingInspectionId: formData.receivingInspectionId,
+      overallFailureRate: formData.overallFailureRate
+    };
+    
+    const inspections = JSON.parse(localStorage.getItem('qualitrack_inspections') || '[]');
+    inspections.push(newInspection);
+    localStorage.setItem('qualitrack_inspections', JSON.stringify(inspections));
+    
+    return { data: { id: newInspection.id, status: "created" } };
+  }
+
   return null;
 }
 
@@ -133,6 +218,34 @@ export async function fetchIncomingSummary() {
 
 export async function createIncomingQC(payload) {
   return request("/qc/incoming", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function fetchReceivingSummary() {
+  return request("/qc/receiving/summary");
+}
+
+export async function createReceivingQC(payload) {
+  return request("/qc/receiving", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function fetchInternalSummary() {
+  return request("/qc/internal/summary");
+}
+
+export async function createInternalQC(payload) {
+  return request("/qc/internal", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
