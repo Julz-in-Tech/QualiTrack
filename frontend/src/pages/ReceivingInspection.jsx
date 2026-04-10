@@ -924,6 +924,50 @@ function ReceivingInspection() {
                   {inspection.failureRate && (
                     <p><strong>Failure Rate:</strong> {inspection.failureRate}%</p>
                   )}
+                  
+                  {/* Display all items with their details */}
+                  {inspection.items && inspection.items.length > 0 && (
+                    <div style={{ marginTop: "15px", padding: "10px", background: "#f8f9fa", borderRadius: "4px" }}>
+                      <h5 style={{ margin: "0 0 10px 0", fontSize: "14px", color: "#333" }}>Items Inspected:</h5>
+                      {inspection.items.map((item, index) => (
+                        <div key={index} style={{ 
+                          marginBottom: "8px", 
+                          padding: "8px", 
+                          background: "white", 
+                          border: "1px solid #dee2e6", 
+                          borderRadius: "4px",
+                          fontSize: "12px"
+                        }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <div>
+                              <strong style={{ color: "#007bff" }}>{item.partNumber}</strong>
+                              {item.description && <span> - {item.description}</span>}
+                              {item.barcode && (
+                                <div style={{ color: "#666", marginTop: "2px" }}>
+                                  <strong>Barcode:</strong> {item.barcode}
+                                </div>
+                              )}
+                              {item.serialNumbers && (
+                                <div style={{ color: "#666", marginTop: "2px" }}>
+                                  <strong>Serial/Batch:</strong> {item.serialNumbers}
+                                </div>
+                              )}
+                            </div>
+                            <div style={{ textAlign: "right", fontSize: "11px" }}>
+                              <div><strong>Qty:</strong> {item.qtyReceived}</div>
+                              <div style={{ color: "#28a745" }}><strong>Good:</strong> {item.qtyGood}</div>
+                              <div style={{ color: "#dc3545" }}><strong>Bad:</strong> {item.qtyBad}</div>
+                              {item.failureRate > 0 && (
+                                <div style={{ color: item.failureRate > 10 ? "#dc3545" : "#ffc107" }}>
+                                  <strong>Fail Rate:</strong> {item.failureRate}%
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </article>
             ))
