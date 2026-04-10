@@ -9,6 +9,13 @@ const firebaseConfig = {
   measurementId: process.env.VITE_FIREBASE_MEASUREMENT_ID || "G-ECSRZGZQJX"
 };
 
+// Validate Firebase configuration
+if (!firebaseConfig.projectId) {
+  console.error('Firebase project ID is missing. Please check your environment variables.');
+  console.error('Current config:', firebaseConfig);
+  throw new Error('Firebase project ID is required. Please set VITE_FIREBASE_PROJECT_ID environment variable.');
+}
+
 // Production-ready Firebase Auth mock that mimics real Firebase behavior
 // In production (Vercel), this will use real Firebase when build system supports ES modules
 const mockAuth = {

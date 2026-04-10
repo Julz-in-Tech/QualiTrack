@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "node scripts/dev.mjs",
     "build": "node scripts/build.mjs",
-    "vercel-build": "node scripts/build.mjs",
+    "start": "node scripts/preview.mjs",
     "preview": "node scripts/preview.mjs"
   },
   "dependencies": {
