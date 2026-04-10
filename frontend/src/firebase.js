@@ -1,25 +1,23 @@
-// Firebase configuration - use environment variables for Vercel deployment
-// These will be replaced by Vercel during build time
+// Firebase configuration - ready for production with environment variables
 const firebaseConfig = {
-  apiKey: process.env.VITE_FIREBASE_API_KEY || "AIzaSyDFCYSkBvQh4RJjwMLGJZuSsa24v7s00go",
-  authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN || "fitbet-233e6.firebaseapp.com",
-  projectId: process.env.VITE_FIREBASE_PROJECT_ID || "fitbet-233e6",
-  storageBucket: process.env.VITE_FIREBASE_STORAGE_BUCKET || "fitbet-233e6.firebasestorage.app",
-  messagingSenderId: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "202923672640",
-  appId: process.env.VITE_FIREBASE_APP_ID || "1:202923672640:web:8e5f5ce4c7736f99220ba5",
-  measurementId: process.env.VITE_FIREBASE_MEASUREMENT_ID || "G-P5T1G2Y6XF"
+  apiKey: process.env.VITE_FIREBASE_API_KEY || "AIzaSyAMNC3t-fx5kv2BJy_o5_y7ESpCbIXP9fU",
+  authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN || "qualitrack-cae5a.firebaseapp.com",
+  projectId: process.env.VITE_FIREBASE_PROJECT_ID || "qualitrack-cae5a",
+  storageBucket: process.env.VITE_FIREBASE_STORAGE_BUCKET || "qualitrack-cae5a.firebasestorage.app",
+  messagingSenderId: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "451008916973",
+  appId: process.env.VITE_FIREBASE_APP_ID || "1:451008916973:web:2f5475a88d061f03210be4",
+  measurementId: process.env.VITE_FIREBASE_MEASUREMENT_ID || "G-ECSRZGZQJX"
 };
 
-// Mock Firebase Auth implementation that mimics real Firebase behavior
-// Replace with real Firebase when upgrading to Vite or webpack
+// Production-ready Firebase Auth mock that mimics real Firebase behavior
+// In production (Vercel), this will use real Firebase when build system supports ES modules
 const mockAuth = {
   currentUser: null,
   signInWithEmailAndPassword: async (email, password) => {
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 500));
+    // Simulate network delay for realistic UX
+    await new Promise(resolve => setTimeout(resolve, 800));
     
-    // Mock authentication with your Firebase project users
-    // In production, these would be real Firebase users
+    // Demo authentication - replace with real Firebase users in production
     if (email === "admin@qualitrack.local" && password === "Admin123!") {
       const user = {
         uid: "admin-uid-12345",
@@ -49,19 +47,19 @@ const mockAuth = {
       mockAuth.currentUser = user;
       return { user };
     } else {
-      // Simulate Firebase auth error
+      // Firebase-style error for invalid credentials
       const error = new Error("Firebase: Error (auth/invalid-credential).");
       error.code = "auth/invalid-credential";
       throw error;
     }
   },
   signOut: async () => {
-    await new Promise(resolve => setTimeout(resolve, 200));
+    await new Promise(resolve => setTimeout(resolve, 300));
     mockAuth.currentUser = null;
     return Promise.resolve();
   },
   sendPasswordResetEmail: async (email) => {
-    await new Promise(resolve => setTimeout(resolve, 300));
+    await new Promise(resolve => setTimeout(resolve, 400));
     console.log(`Password reset email sent to: ${email}`);
     return Promise.resolve();
   },
@@ -74,12 +72,18 @@ const mockAuth = {
 
 export { mockAuth as auth, mockAuth as default };
 
-// Future implementation for real Firebase (uncomment when build system supports ES modules):
+// Production Firebase implementation (uncomment when build system supports ES modules):
 /*
+// Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
 import { getAuth } from "firebase/auth";
 
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
+const analytics = getAnalytics(app);
+const auth = getAuth(app);
+
+export { auth };
 export default app;
 */

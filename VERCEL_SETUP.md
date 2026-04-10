@@ -8,13 +8,13 @@ Add these environment variables in your Vercel project dashboard under **Setting
 
 | Variable Name | Value | Description |
 |---------------|-------|-------------|
-| `VITE_FIREBASE_API_KEY` | `AIzaSyDFCYSkBvQh4RJjwMLGJZuSsa24v7s00go` | Firebase API key |
-| `VITE_FIREBASE_AUTH_DOMAIN` | `fitbet-233e6.firebaseapp.com` | Firebase auth domain |
-| `VITE_FIREBASE_PROJECT_ID` | `fitbet-233e6` | Firebase project ID |
-| `VITE_FIREBASE_STORAGE_BUCKET` | `fitbet-233e6.firebasestorage.app` | Firebase storage bucket |
-| `VITE_FIREBASE_MESSAGING_SENDER_ID` | `202923672640` | Firebase messaging sender ID |
-| `VITE_FIREBASE_APP_ID` | `1:202923672640:web:8e5f5ce4c7736f99220ba5` | Firebase app ID |
-| `VITE_FIREBASE_MEASUREMENT_ID` | `G-P5T1G2Y6XF` | Google Analytics measurement ID |
+| `VITE_FIREBASE_API_KEY` | `AIzaSyAMNC3t-fx5kv2BJy_o5_y7ESpCbIXP9fU` | Firebase API key |
+| `VITE_FIREBASE_AUTH_DOMAIN` | `qualitrack-cae5a.firebaseapp.com` | Firebase auth domain |
+| `VITE_FIREBASE_PROJECT_ID` | `qualitrack-cae5a` | Firebase project ID |
+| `VITE_FIREBASE_STORAGE_BUCKET` | `qualitrack-cae5a.firebasestorage.app` | Firebase storage bucket |
+| `VITE_FIREBASE_MESSAGING_SENDER_ID` | `451008916973` | Firebase messaging sender ID |
+| `VITE_FIREBASE_APP_ID` | `1:451008916973:web:2f5475a88d061f03210be4` | Firebase app ID |
+| `VITE_FIREBASE_MEASUREMENT_ID` | `G-ECSRZGZQJX` | Google Analytics measurement ID |
 
 ## Step-by-Step Setup
 
@@ -41,7 +41,7 @@ After adding all environment variables:
 
 ### Enable Email/Password Authentication
 1. Go to [Firebase Console](https://console.firebase.google.com)
-2. Select your project: `fitbet-233e6`
+2. Select your project: `qualitrack-cae5a`
 3. Go to **Authentication** > **Sign-in method**
 4. Enable **Email/Password** provider
 5. Click **Save**
