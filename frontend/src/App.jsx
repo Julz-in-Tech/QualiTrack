@@ -4,14 +4,14 @@ import AppShell from "./components/AppShell";
 import ReceivingInspection from "./pages/ReceivingInspection";
 import InternalInspection from "./pages/InternalInspection";
 import NCRForm from "./pages/NCRForm";
-import LoginPage from "./pages/LoginPage";
+import AuthPage from "./pages/AuthPage";
 
 function App() {
   const { currentUser } = useAuth();
   const [currentPage, setCurrentPage] = useState("receiving");
 
   if (!currentUser) {
-    return <LoginPage />;
+    return <AuthPage />;
   }
 
   function renderPage() {
