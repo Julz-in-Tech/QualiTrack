@@ -77,15 +77,24 @@ function NCRForm() {
     const stored = JSON.parse(localStorage.getItem('qualitrack_ncrs') || '[]');
     setSavedNCRs(stored);
     
-    // Set current user as initiator
+    // Check for pre-filled data from receiving inspection
+    const prefillData = JSON.parse(localStorage.getItem('qualitrack_ncr_prefill') || '{}');
+    
+    // Set current user as initiator and apply pre-fill data if available
     if (currentUser) {
       setForm(prev => ({
         ...prev,
-        initiatorReporter: currentUser.email || "",
+        ...prefillData, // Apply pre-filled data first
+        initiatorReporter: currentUser.email || prefillData.initiatorReporter || "",
         initiatorCompanyName: "QualiTrack Company",
         reportDate: formatDate(new Date()),
-        incidentDate: formatDate(new Date())
+        incidentDate: prefillData.incidentDate || formatDate(new Date())
       }));
+      
+      // Clear pre-fill data after applying it
+      if (Object.keys(prefillData).length > 0) {
+        localStorage.removeItem('qualitrack_ncr_prefill');
+      }
     }
   }, [currentUser]);
 

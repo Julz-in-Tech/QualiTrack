@@ -42,7 +42,7 @@ function formatDate(value) {
   }).format(date);
 }
 
-function ReceivingInspection() {
+function ReceivingInspection({ setCurrentPage }) {
   const [form, setForm] = useState(initialForm);
   const [summary, setSummary] = useState({
     stats: {
@@ -123,19 +123,43 @@ function ReceivingInspection() {
   }
 
   function addItem() {
+    // Validation for required fields
+    if (!currentItem.partNumber || currentItem.partNumber.trim() === "") {
+      setMessage({
+        type: "error",
+        text: "Part number is required"
+      });
+      return;
+    }
+    
+    if (!currentItem.qtyReceived || currentItem.qtyReceived.trim() === "") {
+      setMessage({
+        type: "error",
+        text: "Quantity received is required"
+      });
+      return;
+    }
+    
     const newItem = {
       ...currentItem,
-      id: Date.now(),
+      id: currentItem.id || Date.now(), // Keep existing ID if editing
       inspectionType: "receiving",
       inspectionDate: new Date().toISOString(),
     };
     
-    setItems([...items, newItem]);
+    if (currentItem.id) {
+      // Update existing item
+      setItems(items.map(item => item.id === currentItem.id ? newItem : item));
+    } else {
+      // Add new item
+      setItems([...items, newItem]);
+    }
+    
     setCurrentItem(initialItem);
     setShowItemForm(false);
     
     // Update form totals
-    const newItems = [...items, newItem];
+    const newItems = currentItem.id ? items.map(item => item.id === currentItem.id ? newItem : item) : [...items, newItem];
     const totalGood = newItems.reduce((sum, item) => sum + (parseInt(item.qtyGood) || 0), 0);
     const totalBad = newItems.reduce((sum, item) => sum + (parseInt(item.qtyBad) || 0), 0);
     
@@ -223,49 +247,54 @@ function ReceivingInspection() {
 
       const data = await createIncomingQC(qcData);
 
-      // Check for failed items and create NCRs automatically
+      // Check for failed items and navigate to NCR form
       const failedItems = items.filter(item => parseInt(item.qtyBad) > 0);
-      let ncrMessage = "";
       
       if (failedItems.length > 0) {
-        try {
-          // Create NCRs for failed items
-          const ncrPromises = failedItems.map(item => {
-            const ncrData = {
-              incidentType: "SUPPLIER",
-              recipientCompanyName: `Supplier ${form.supplierId}`,
-              incidentDate: form.deliveryDate || new Date().toISOString().split('T')[0],
-              incidentNumber: `ME-SCF-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
-              orderReference: form.poNumber,
-              initiatorReporter: "Current User",
-              initiatorCompanyName: "QualiTrack Company",
-              affectedDepartment: "PRODUCTION",
-              reportDate: new Date().toISOString().split('T')[0],
-              productNumber: item.partNumber,
-              productDescription: item.description,
-              partNumber: item.partNumber,
-              partDescription: item.description,
-              serialUidBatch: item.serialNumbers,
-              affectedQuantity: item.qtyBad,
-              nonConformanceDescription: `Item ${item.partNumber} failed receiving inspection. ${item.qtyBad} out of ${item.qtyReceived} units were rejected.`,
-              desiredOutcome: "Replace failed items with conforming products",
-              rootCauseAnalysis: "Receiving inspection revealed non-conformance to specifications",
-              correctivePreventiveActions: "Return failed items to supplier and implement additional quality checks"
-            };
+        // Prepare pre-filled NCR data for the first failed item
+        const failedItem = failedItems[0]; // Use first failed item for NCR form
+        const ncrData = {
+          incidentType: "SUPPLIER",
+          recipientCompanyName: `Supplier ${form.supplierId}`,
+          incidentDate: form.deliveryDate || new Date().toISOString().split('T')[0],
+          incidentNumber: `ME-SCF-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
+          orderReference: form.poNumber,
+          initiatorReporter: "Current User",
+          initiatorCompanyName: "QualiTrack Company",
+          affectedDepartment: "PRODUCTION",
+          reportDate: new Date().toISOString().split('T')[0],
+          productNumber: failedItem.partNumber,
+          productDescription: failedItem.description,
+          partNumber: failedItem.partNumber,
+          partDescription: failedItem.description,
+          serialUidBatch: failedItem.serialNumbers,
+          affectedQuantity: failedItem.qtyBad,
+          nonConformanceDescription: `Item ${failedItem.partNumber} failed receiving inspection. ${failedItem.qtyBad} out of ${failedItem.qtyReceived} units were rejected.`,
+          desiredOutcome: "Replace failed items with conforming products",
+          rootCauseAnalysis: "Receiving inspection revealed non-conformance to specifications",
+          correctivePreventiveActions: "Return failed items to supplier and implement additional quality checks"
+        };
 
-            return createIncomingQC(ncrData);
-          });
+        // Store NCR data in localStorage for pre-filling the form
+        localStorage.setItem('qualitrack_ncr_prefill', JSON.stringify(ncrData));
+        
+        // Show success message and navigate to NCR form
+        setMessage({
+          type: "success",
+          text: `Receiving inspection saved successfully. Overall failure rate: ${calculateFailureRate()}%. Redirecting to NCR form for failed items...`,
+        });
 
-          await Promise.all(ncrPromises);
-          ncrMessage = ` Also created ${failedItems.length} NCR(s) for failed items.`;
-        } catch (ncrError) {
-          ncrMessage = ` Warning: Failed to create automatic NCRs: ${ncrError.message}`;
-        }
+        // Navigate to NCR form after a short delay
+        setTimeout(() => {
+          setCurrentPage("ncr");
+        }, 1500);
+        
+        return; // Don't reset form yet, let user complete NCR first
       }
 
       setMessage({
         type: "success",
-        text: `Receiving inspection saved successfully. Overall failure rate: ${calculateFailureRate()}%.${ncrMessage}`,
+        text: `Receiving inspection saved successfully. Overall failure rate: ${calculateFailureRate()}%.`,
       });
 
       // Reset form

@@ -17,13 +17,13 @@ function App() {
   function renderPage() {
     switch (currentPage) {
       case "receiving":
-        return <ReceivingInspection />;
+        return <ReceivingInspection setCurrentPage={setCurrentPage} />;
       case "internal":
-        return <InternalInspection />;
+        return <InternalInspection setCurrentPage={setCurrentPage} />;
       case "ncr":
         return <NCRForm />;
       default:
-        return <ReceivingInspection />;
+        return <ReceivingInspection setCurrentPage={setCurrentPage} />;
     }
   }
 
