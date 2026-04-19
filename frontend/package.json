@@ -4,6 +4,9 @@
   "private": true,
   "description": "React frontend for the QualiTrack Quality Control Management System",
   "type": "module",
+  "engines": {
+    "node": "20.x"
+  },
   "scripts": {
     "dev": "node scripts/dev.mjs",
     "build": "node scripts/build.mjs",
