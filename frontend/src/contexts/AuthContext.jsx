@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 
 const AuthContext = createContext(undefined);
@@ -12,6 +13,7 @@ const demoAccounts = [
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -40,8 +42,9 @@ export function AuthProvider({ children }) {
         window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
       }
       toast.success(`Welcome back, ${match.role}!`);
+      await navigate({ to: "/receiving" });
     },
-    [],
+    [navigate],
   );
 
   const logout = useCallback(() => {
@@ -49,7 +52,8 @@ export function AuthProvider({ children }) {
     if (typeof window !== "undefined") {
       window.localStorage.removeItem(STORAGE_KEY);
     }
-  }, []);
+    void navigate({ to: "/auth" });
+  }, [navigate]);
 
   return (
     <AuthContext.Provider value={{ user, login, logout }}>{children}</AuthContext.Provider>

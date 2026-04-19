@@ -52,9 +52,9 @@
   --destructive-foreground: oklch(98.5% 0 0);
   --border: oklch(92.8% 0.006 264.531);
   --input: oklch(100% 0 0);
-  --ring: oklch(62.3% 0.214 259.815);
-  --brand: oklch(62.3% 0.214 259.815);
-  --brand-deep: oklch(42.4% 0.199 265.638);
+  --ring: oklch(55% 0.18 235);
+  --brand: oklch(55% 0.18 235);
+  --brand-deep: oklch(35% 0.12 240);
   --brand-foreground: oklch(98.5% 0 0);
   --brand-color: var(--brand);
   --radius: 0.75rem;

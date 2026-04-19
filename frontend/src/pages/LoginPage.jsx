@@ -168,6 +168,38 @@ function LoginForm() {
           {form.formState.errors.root.message}
         </div>
       )}
+
+      <div className="rounded-md border border-muted/60 bg-muted/20 px-4 py-3">
+        <p className="text-xs text-muted-foreground mb-2 font-medium">Demo Accounts:</p>
+        <div className="space-y-1">
+          <div className="flex justify-between items-center">
+            <span className="text-xs text-muted-foreground">Admin:</span>
+            <button
+              type="button"
+              onClick={() => {
+                form.setValue("email", "admin@qualitrack.local");
+                form.setValue("password", "Admin123!");
+              }}
+              className="text-xs text-brand hover:underline"
+            >
+              admin@qualitrack.local / Admin123!
+            </button>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-xs text-muted-foreground">QC Inspector:</span>
+            <button
+              type="button"
+              onClick={() => {
+                form.setValue("email", "inspector@qualitrack.local");
+                form.setValue("password", "Inspect123!");
+              }}
+              className="text-xs text-brand hover:underline"
+            >
+              inspector@qualitrack.local / Inspect123!
+            </button>
+          </div>
+        </div>
+      </div>
     </form>
   );
 }
