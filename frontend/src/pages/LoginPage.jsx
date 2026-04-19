@@ -3,6 +3,11 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Eye, EyeOff, Lock, Mail, ShieldCheck } from "lucide-react";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import { toast } from "sonner";
+import { Toaster } from "../components/ui/sonner";
 import { useAuth } from "../contexts/AuthContext";
 
 const loginSchema = z.object({
@@ -30,52 +35,16 @@ const demoAccounts = [
   },
 ];
 
-function LoginPage() {
-  const [show, setShow] = useState(false);
-  const { login } = useAuth();
-  const form = useForm({
-    resolver: zodResolver(loginSchema),
-    defaultValues: { email: "", password: "" },
-  });
+type LoginValues = z.infer<typeof loginSchema>;
 
-  async function onSubmit(values) {
-    try {
-      await login(values.email, values.password);
-    } catch (error) {
-      form.setError("root", { message: error.message });
-    }
-  }
-
+function AuthPage() {
   return (
-    <div style={{
-      minHeight: '100vh',
-      width: '100%',
-      background: 'linear-gradient(to bottom right, rgba(243, 244, 246, 0.4), white, rgba(59, 130, 246, 0.1))'
-    }}>
-      <div style={{
-        position: 'relative',
-        width: '100%',
-        overflow: 'hidden',
-        backgroundColor: 'white',
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-        border: '1px solid rgba(229, 231, 235, 0.5)',
-        minHeight: '100vh'
-      }}>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr',
-          minHeight: '100vh'
-        }}>
+    <div className="min-h-screen w-full bg-gradient-to-br from-muted/40 via-background to-brand/10">
+      <Toaster richColors position="top-right" />
+      <div className="relative w-full overflow-hidden bg-card shadow-2xl ring-1 ring-border/50 min-h-screen">
+        <div className="grid md:grid-cols-2 min-h-screen">
           <BrandPanel />
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '1.5rem',
-            '@media (min-width: 768px)': {
-              padding: '2.5rem'
-            }
-          }}>
+          <div className="flex items-center justify-center p-6 sm:p-10">
             <LoginForm />
           </div>
         </div>
@@ -87,79 +56,21 @@ function LoginPage() {
 function BrandPanel() {
   return (
     <div
+      className="relative hidden flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-brand to-brand-deep p-10 text-brand-foreground md:flex"
       style={{
-        position: 'relative',
-        display: 'none',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        overflow: 'hidden',
-        background: 'linear-gradient(to bottom right, #3b82f6, #1e40af)',
-        padding: '2.5rem',
-        color: 'white',
-        '@media (min-width: 768px)': {
-          display: 'flex'
-        },
-        borderTopRightRadius: '40% 60%',
-        borderBottomRightRadius: '40% 60%'
+        borderTopRightRadius: "40% 60%",
+        borderBottomRightRadius: "40% 60%",
       }}
     >
-      <div style={{
-        position: 'absolute',
-        left: '-4rem',
-        top: '-4rem',
-        width: '14rem',
-        height: '14rem',
-        borderRadius: '50%',
-        backgroundColor: 'rgba(255, 255, 255, 0.1)',
-        filter: 'blur(40px)',
-        pointerEvents: 'none'
-      }} />
-      <div style={{
-        position: 'absolute',
-        bottom: '-5rem',
-        right: '-2.5rem',
-        width: '18rem',
-        height: '18rem',
-        borderRadius: '50%',
-        backgroundColor: 'rgba(255, 255, 255, 0.1)',
-        filter: 'blur(64px)',
-        pointerEvents: 'none'
-      }} />
+      <div className="pointer-events-none absolute -left-16 -top-16 h-56 w-56 rounded-full bg-white/10 blur-2xl" />
+      <div className="pointer-events-none absolute -bottom-20 -right-10 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
 
-      <div style={{
-        position: 'relative',
-        zIndex: 10,
-        maxWidth: '20rem',
-        textAlign: 'center'
-      }}>
-        <div style={{
-          margin: '0 auto 1.5rem',
-          display: 'flex',
-          height: '3.5rem',
-          width: '3.5rem',
-          alignItems: 'center',
-          justifyContent: 'center',
-          borderRadius: '1rem',
-          backgroundColor: 'rgba(255, 255, 255, 0.15)',
-          border: '1px solid rgba(255, 255, 255, 0.3)',
-          backdropFilter: 'blur(10px)'
-        }}>
-          <ShieldCheck style={{ height: '1.75rem', width: '1.75rem' }} />
+      <div className="relative z-10 max-w-xs text-center">
+        <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-foreground/15 ring-1 ring-brand-foreground/30 backdrop-blur">
+          <ShieldCheck className="h-7 w-7" />
         </div>
-        <h2 style={{
-          fontSize: '2rem',
-          fontWeight: 'bold',
-          letterSpacing: '-0.025em',
-          '@media (min-width: 640px)': {
-            fontSize: '2.25rem'
-          }
-        }}>QualiTrack</h2>
-        <p style={{
-          marginTop: '0.75rem',
-          fontSize: '0.875rem',
-          color: 'rgba(255, 255, 255, 0.85)'
-        }}>
+        <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">QualiTrack</h2>
+        <p className="mt-3 text-sm text-brand-foreground/85">
           Quality control & receiving inspection, built for your team.
         </p>
       </div>
@@ -170,12 +81,12 @@ function BrandPanel() {
 function LoginForm() {
   const [show, setShow] = useState(false);
   const { login } = useAuth();
-  const form = useForm({
+  const form = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: "", password: "" },
   });
 
-  async function onSubmit(values) {
+  async function onSubmit(values: LoginValues) {
     try {
       await login(values.email, values.password);
     } catch (error) {
@@ -184,39 +95,13 @@ function LoginForm() {
   }
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} style={{ width: '100%', maxWidth: '24rem' }}>
-      <div style={{
-        marginBottom: '1.25rem',
-        textAlign: 'center',
-        '@media (min-width: 768px)': {
-          textAlign: 'left'
-        }
-      }}>
-        <div style={{
-          marginBottom: '1rem',
-          display: 'inline-flex',
-          height: '2.5rem',
-          width: '2.5rem',
-          alignItems: 'center',
-          justifyContent: 'center',
-          borderRadius: '0.75rem',
-          backgroundColor: 'rgba(59, 130, 246, 0.1)',
-          color: '#1e40af',
-          '@media (min-width: 768px)': {
-            display: 'none'
-          }
-        }}>
-          <ShieldCheck style={{ height: '1.25rem', width: '1.25rem' }} />
+    <form onSubmit={form.handleSubmit(onSubmit)} className="w-full max-w-sm space-y-5">
+      <div className="space-y-1 text-center md:text-left">
+        <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-brand/10 text-brand-deep md:hidden">
+          <ShieldCheck className="h-5 w-5" />
         </div>
-        <h1 style={{
-          fontSize: '1.875rem',
-          fontWeight: 'bold',
-          letterSpacing: '-0.025em'
-        }}>Sign in</h1>
-        <p style={{
-          fontSize: '0.875rem',
-          color: '#6b7280'
-        }}>
+        <h1 className="text-3xl font-bold tracking-tight">Sign in</h1>
+        <p className="text-sm text-muted-foreground">
           Use your company account to access QualiTrack.
         </p>
       </div>
@@ -224,142 +109,76 @@ function LoginForm() {
       <FieldWithIcon
         id="email"
         label="Work email"
-        icon={<Mail style={{ height: '1rem', width: '1rem' }} />}
+        icon={<Mail className="h-4 w-4" />}
         error={form.formState.errors.email?.message}
       >
-        <input
+        <Input
           id="email"
           type="email"
           placeholder="you@company.com"
           maxLength={255}
           autoComplete="email"
           {...form.register("email")}
-          style={{
-            width: '100%',
-            padding: '0.75rem',
-            border: 'none',
-            backgroundColor: 'transparent',
-            fontSize: '1rem',
-            outline: 'none'
-          }}
         />
       </FieldWithIcon>
 
       <FieldWithIcon
         id="password"
         label="Password"
-        icon={<Lock style={{ height: '1rem', width: '1rem' }} />}
+        icon={<Lock className="h-4 w-4" />}
         error={form.formState.errors.password?.message}
         trailing={
           <button
             type="button"
             onClick={() => setShow((s) => !s)}
-            style={{
-              color: '#6b7280',
-              border: 'none',
-              background: 'none',
-              cursor: 'pointer',
-              padding: '0.5rem'
-            }}
+            className="text-muted-foreground hover:text-foreground"
             aria-label={show ? "Hide password" : "Show password"}
           >
-            {show ? <EyeOff style={{ height: '1rem', width: '1rem' }} /> : <Eye style={{ height: '1rem', width: '1rem' }} />}
+            {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>
         }
       >
-        <input
+        <Input
           id="password"
           type={show ? "text" : "password"}
           placeholder="Password"
           maxLength={128}
           autoComplete="current-password"
           {...form.register("password")}
-          style={{
-            width: '100%',
-            padding: '0.75rem',
-            border: 'none',
-            backgroundColor: 'transparent',
-            fontSize: '1rem',
-            outline: 'none'
-          }}
         />
       </FieldWithIcon>
 
-      <div style={{
-        display: 'flex',
-        justifyContent: 'flex-end'
-      }}>
+      <div className="flex justify-end">
         <button
           type="button"
-          style={{
-            fontSize: '0.75rem',
-            color: '#6b7280',
-            border: 'none',
-            background: 'none',
-            cursor: 'pointer',
-            textDecoration: 'underline',
-            textDecorationOffset: '2px'
-          }}
-          onClick={() => alert("Contact your administrator to reset your password.")}
+          className="text-xs text-muted-foreground hover:text-foreground hover:underline"
+          onClick={() => toast.info("Contact your administrator to reset your password.")}
         >
           Forgot password?
         </button>
       </div>
 
-      <button
+      <Button
         type="submit"
         disabled={form.formState.isSubmitting}
-        style={{
-          width: '100%',
-          borderRadius: '9999px',
-          background: 'linear-gradient(to right, #1e40af, #3b82f6)',
-          padding: '1.5rem',
-          fontSize: '1rem',
-          fontWeight: '600',
-          color: 'white',
-          border: 'none',
-          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-          cursor: form.formState.isSubmitting ? 'not-allowed' : 'pointer',
-          opacity: form.formState.isSubmitting ? 0.7 : 1
-        }}
+        className="w-full rounded-full bg-gradient-to-r from-brand-deep to-brand py-6 text-base font-semibold text-brand-foreground shadow-lg hover:opacity-95"
       >
         Sign in
-      </button>
+      </Button>
 
-      <p style={{
-        textAlign: 'center',
-        fontSize: '0.75rem',
-        color: '#6b7280',
-        marginTop: '1.25rem'
-      }}>
+      <p className="text-center text-xs text-muted-foreground">
         Need access?{" "}
         <button
           type="button"
-          onClick={() => alert("Please contact your QualiTrack administrator.")}
-          style={{
-            fontWeight: '500',
-            color: '#1e40af',
-            border: 'none',
-            background: 'none',
-            cursor: 'pointer',
-            textDecoration: 'underline',
-            textDecorationOffset: '2px'
-          }}
+          onClick={() => toast.info("Please contact your QualiTrack administrator.")}
+          className="font-medium text-brand-deep underline-offset-2 hover:underline"
         >
           Contact your administrator
         </button>
       </p>
 
       {form.formState.errors.root && (
-        <p style={{
-          marginTop: '1rem',
-          padding: '0.75rem',
-          backgroundColor: '#fef2f2',
-          border: '1px solid #fecaca',
-          borderRadius: '0.375rem',
-          color: '#dc2626',
-          fontSize: '0.875rem'
-        }}>
+        <p className="px-4 text-xs text-destructive">
           {form.formState.errors.root.message}
         </p>
       )}
@@ -374,48 +193,33 @@ function FieldWithIcon({
   trailing,
   error,
   children,
+}: {
+  id: string;
+  label: string;
+  icon: React.ReactNode;
+  trailing?: React.ReactNode;
+  error?: string;
+  children: React.ReactNode;
 }) {
   return (
-    <div style={{ marginBottom: '0.375rem' }}>
-      <label htmlFor={id} style={{
-        position: 'absolute',
-        width: '1px',
-        height: '1px',
-        padding: '0',
-        margin: '-1px',
-        overflow: 'hidden',
-        clip: 'rect(0, 0, 0, 0)',
-        whiteSpace: 'nowrap',
-        border: '0'
-      }}>
+    <div className="space-y-1.5">
+      <Label htmlFor={id} className="sr-only">
         {label}
-      </label>
+      </Label>
       <div
-        style={{
-          position: 'relative',
-          display: 'flex',
-          alignItems: 'center',
-          borderRadius: '9999px',
-          border: error ? '1px solid rgba(220, 38, 38, 0.6)' : '1px solid #e5e7eb',
-          backgroundColor: 'rgba(243, 244, 246, 0.4)',
-          paddingLeft: '1rem',
-          paddingRight: '0.75rem',
-          transition: 'all 0.15s ease-in-out'
-        }}
+        className={`group relative flex items-center rounded-full border bg-muted/40 pl-4 pr-3 transition focus-within:border-brand focus-within:bg-background ${
+          error ? "border-destructive/60" : "border-input"
+        }`}
       >
-        <span style={{ color: '#6b7280' }}>{icon}</span>
-        <div style={{ flex: 1 }}>
+        <span className="text-muted-foreground">{icon}</span>
+        <div className="flex-1 [&_input]:border-0 [&_input]:bg-transparent [&_input]:px-3 [&_input]:py-3 [&_input]:shadow-none [&_input]:focus-visible:ring-0">
           {children}
         </div>
         {trailing}
       </div>
-      {error && <p style={{
-        paddingLeft: '1rem',
-        fontSize: '0.75rem',
-        color: '#dc2626'
-      }}>{error}</p>}
+      {error && <p className="px-4 text-xs text-destructive">{error}</p>}
     </div>
   );
 }
 
-export default LoginPage;
+export default AuthPage;
