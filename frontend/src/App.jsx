@@ -1,17 +1,18 @@
 import { useState } from "react";
 import { useAuth } from "./contexts/AuthContext";
+// import AuthPage from "./pages/AuthPage"; // Temporarily disabled
 import AppShell from "./components/AppShell";
 import ReceivingInspection from "./pages/ReceivingInspection";
 import InternalInspection from "./pages/InternalInspection";
 import NCRForm from "./pages/NCRForm";
-import AuthPage from "./pages/AuthPage";
+import LoginPage from "./pages/LoginPage";
 
 function App() {
   const { currentUser } = useAuth();
   const [currentPage, setCurrentPage] = useState("receiving");
 
   if (!currentUser) {
-    return <AuthPage />;
+    return <LoginPage />; // Show LoginPage since AuthPage is disabled
   }
 
   function renderPage() {
