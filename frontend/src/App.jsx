@@ -8,11 +8,11 @@ import NCRForm from "./pages/NCRForm";
 import LoginPage from "./pages/LoginPage";
 
 function App() {
-  const { currentUser } = useAuth();
+  const { user } = useAuth();
   const [currentPage, setCurrentPage] = useState("receiving");
 
-  if (!currentUser) {
-    return <LoginPage />; // Show LoginPage since AuthPage is disabled
+  if (!user) {
+    return <LoginPage />;
   }
 
   function renderPage() {
@@ -29,7 +29,7 @@ function App() {
   }
 
   return (
-    <AppShell currentUser={currentUser} currentPage={currentPage} setCurrentPage={setCurrentPage}>
+    <AppShell currentUser={user} currentPage={currentPage} setCurrentPage={setCurrentPage}>
       {renderPage()}
     </AppShell>
   );

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { createFileRoute } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -9,6 +10,20 @@ import { Label } from "../components/ui/label";
 import { toast } from "sonner";
 import { Toaster } from "../components/ui/sonner";
 import { useAuth } from "../contexts/AuthContext";
+
+export const Route = createFileRoute("/auth")({
+  head: () => ({
+    meta: [
+      { title: "Sign in - QualiTrack" },
+      {
+        name: "description",
+        content:
+          "Securely sign in to QualiTrack to manage receiving inspections and quality control.",
+      },
+    ],
+  }),
+  component: AuthPage,
+});
 
 const loginSchema = z.object({
   email: z
@@ -21,19 +36,6 @@ const loginSchema = z.object({
     .min(8, "Password must be at least 8 characters")
     .max(128, "Password is too long"),
 });
-
-const demoAccounts = [
-  {
-    role: "Admin",
-    email: "admin@qualitrack.local",
-    password: "Admin123!",
-  },
-  {
-    role: "QC Inspector", 
-    email: "inspector@qualitrack.local",
-    password: "Inspect123!",
-  },
-];
 
 type LoginValues = z.infer<typeof loginSchema>;
 
@@ -90,7 +92,8 @@ function LoginForm() {
     try {
       await login(values.email, values.password);
     } catch (error) {
-      form.setError("root", { message: error.message });
+      const message = error instanceof Error ? error.message : "Sign in failed";
+      form.setError("root", { message });
     }
   }
 
@@ -178,9 +181,9 @@ function LoginForm() {
       </p>
 
       {form.formState.errors.root && (
-        <p className="px-4 text-xs text-destructive">
+        <div className="rounded-md border border-destructive/40 bg-destructive/10 px-4 py-2 text-center text-xs text-destructive">
           {form.formState.errors.root.message}
-        </p>
+        </div>
       )}
     </form>
   );
