@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -10,20 +9,6 @@ import { Label } from "../components/ui/label";
 import { toast } from "sonner";
 import { Toaster } from "../components/ui/sonner";
 import { useAuth } from "../contexts/AuthContext";
-
-export const Route = createFileRoute("/auth")({
-  head: () => ({
-    meta: [
-      { title: "Sign in - QualiTrack" },
-      {
-        name: "description",
-        content:
-          "Securely sign in to QualiTrack to manage receiving inspections and quality control.",
-      },
-    ],
-  }),
-  component: AuthPage,
-});
 
 const loginSchema = z.object({
   email: z
@@ -36,8 +21,6 @@ const loginSchema = z.object({
     .min(8, "Password must be at least 8 characters")
     .max(128, "Password is too long"),
 });
-
-type LoginValues = z.infer<typeof loginSchema>;
 
 function AuthPage() {
   return (
@@ -83,12 +66,12 @@ function BrandPanel() {
 function LoginForm() {
   const [show, setShow] = useState(false);
   const { login } = useAuth();
-  const form = useForm<LoginValues>({
+  const form = useForm({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: "", password: "" },
   });
 
-  async function onSubmit(values: LoginValues) {
+  async function onSubmit(values) {
     try {
       await login(values.email, values.password);
     } catch (error) {
@@ -196,13 +179,6 @@ function FieldWithIcon({
   trailing,
   error,
   children,
-}: {
-  id: string;
-  label: string;
-  icon: React.ReactNode;
-  trailing?: React.ReactNode;
-  error?: string;
-  children: React.ReactNode;
 }) {
   return (
     <div className="space-y-1.5">

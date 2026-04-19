@@ -66,7 +66,7 @@ function generateNCRNumber(type) {
 }
 
 function NCRForm() {
-  const { currentUser } = useAuth();
+  const { user } = useAuth();
   const [form, setForm] = useState(initialForm);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState(null);
@@ -81,11 +81,11 @@ function NCRForm() {
     const prefillData = JSON.parse(localStorage.getItem('qualitrack_ncr_prefill') || '{}');
     
     // Set current user as initiator and apply pre-fill data if available
-    if (currentUser) {
+    if (user) {
       setForm(prev => ({
         ...prev,
         ...prefillData, // Apply pre-filled data first
-        initiatorReporter: currentUser.email || prefillData.initiatorReporter || "",
+        initiatorReporter: user.email || prefillData.initiatorReporter || "",
         initiatorCompanyName: "QualiTrack Company",
         reportDate: formatDate(new Date()),
         incidentDate: prefillData.incidentDate || formatDate(new Date())
@@ -96,7 +96,7 @@ function NCRForm() {
         localStorage.removeItem('qualitrack_ncr_prefill');
       }
     }
-  }, [currentUser]);
+  }, [user]);
 
   function updateField(event) {
     const { name, value } = event.target;
@@ -123,7 +123,7 @@ function NCRForm() {
         id: Date.now(),
         status: "PENDING",
         createdAt: new Date().toISOString(),
-        createdBy: currentUser?.email || "Anonymous"
+        createdBy: user?.email || "Anonymous"
       };
 
       // Save to localStorage
@@ -141,7 +141,7 @@ function NCRForm() {
         ...initialForm,
         documentNumber: "ME-DOC-QAM-FOR-002-01-EN",
         version: "01",
-        initiatorReporter: currentUser?.email || "",
+        initiatorReporter: user?.email || "",
         initiatorCompanyName: "QualiTrack Company",
         reportDate: formatDate(new Date()),
         incidentDate: formatDate(new Date()),

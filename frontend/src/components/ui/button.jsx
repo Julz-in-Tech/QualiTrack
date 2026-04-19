@@ -1,91 +1,41 @@
-import * as React from "react"
+import * as React from "react";
+import { cn } from "../../lib/utils";
 
-const Button = React.forwardRef(({ className, variant = "default", size = "default", asChild = false, style, ...props }, ref) => {
-  const getStyles = () => {
-    const baseStyles = {
-      display: 'inline-flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      whiteSpace: 'nowrap',
-      borderRadius: '0.375rem',
-      fontSize: '0.875rem',
-      fontWeight: '500',
-      transition: 'all 0.15s ease-in-out',
-      cursor: 'pointer',
-      border: 'none',
-      padding: '0.5rem 1rem',
-      textDecoration: 'none',
-      ...style
-    };
+const variantClasses = {
+  default: "bg-primary text-primary-foreground shadow-sm hover:opacity-95",
+  destructive: "bg-destructive text-destructive-foreground shadow-sm hover:opacity-95",
+  outline: "border border-input bg-background text-foreground hover:bg-muted",
+  secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+  ghost: "text-foreground hover:bg-muted",
+  link: "text-primary underline-offset-4 hover:underline",
+};
 
-    const variantStyles = {
-      default: {
-        backgroundColor: 'var(--primary)',
-        color: 'var(--primary-foreground)',
-      },
-      destructive: {
-        backgroundColor: 'var(--destructive)',
-        color: 'var(--destructive-foreground)',
-      },
-      outline: {
-        border: '1px solid var(--border)',
-        backgroundColor: 'var(--background)',
-        color: 'var(--foreground)',
-      },
-      secondary: {
-        backgroundColor: 'var(--secondary)',
-        color: 'var(--secondary-foreground)',
-      },
-      ghost: {
-        backgroundColor: 'transparent',
-        color: 'var(--foreground)',
-      },
-      link: {
-        color: 'var(--primary)',
-        textDecoration: 'underline',
-        textDecorationOffset: '4px',
-      },
-    };
+const sizeClasses = {
+  default: "h-10 px-4 py-2",
+  sm: "h-9 px-3 text-xs",
+  lg: "h-11 px-8",
+  icon: "h-10 w-10",
+};
 
-    const sizeStyles = {
-      default: {
-        height: '2.5rem',
-        padding: '0.5rem 1rem',
-      },
-      sm: {
-        height: '2.25rem',
-        padding: '0.25rem 0.75rem',
-        fontSize: '0.8125rem',
-      },
-      lg: {
-        height: '2.75rem',
-        padding: '0 2rem',
-        fontSize: '1rem',
-      },
-      icon: {
-        height: '2.5rem',
-        width: '2.5rem',
-        padding: '0',
-      },
-    };
+const Button = React.forwardRef(
+  ({ className, variant = "default", size = "default", asChild = false, type = "button", ...props }, ref) => {
+    const Comp = asChild ? "span" : "button";
 
-    return {
-      ...baseStyles,
-      ...variantStyles[variant],
-      ...sizeStyles[size],
-    };
-  };
+    return (
+      <Comp
+        ref={ref}
+        type={asChild ? undefined : type}
+        className={cn(
+          "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
+          variantClasses[variant] || variantClasses.default,
+          sizeClasses[size] || sizeClasses.default,
+          className,
+        )}
+        {...props}
+      />
+    );
+  },
+);
+Button.displayName = "Button";
 
-  const Comp = asChild ? "span" : "button"
-  return (
-    <Comp
-      style={getStyles()}
-      className={className}
-      ref={ref}
-      {...props}
-    />
-  )
-})
-Button.displayName = "Button"
-
-export { Button }
+export { Button };

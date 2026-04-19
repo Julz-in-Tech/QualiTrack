@@ -1,3 +1,4 @@
+import { spawn } from "node:child_process";
 import { createWriteStream } from "node:fs";
 import { copyFile, mkdir } from "node:fs/promises";
 import path from "node:path";
@@ -13,7 +14,18 @@ const assetsDir = path.join(distDir, "assets");
 await mkdir(assetsDir, { recursive: true });
 
 await copyFile(path.join(rootDir, "index.html"), path.join(distDir, "index.html"));
-await copyFile(path.join(rootDir, "src", "styles.css"), path.join(assetsDir, "app.css"));
+await runCommand(
+  process.execPath,
+  [
+    path.join(rootDir, "node_modules", "@tailwindcss", "cli", "dist", "index.mjs"),
+    "-i",
+    path.join(rootDir, "src", "styles.css"),
+    "-o",
+    path.join(assetsDir, "app.css"),
+    "--minify",
+  ],
+  rootDir,
+);
 
 const bundler = browserify(path.join(rootDir, "src", "main.jsx"), {
   extensions: [".js", ".jsx"],
@@ -39,3 +51,22 @@ await new Promise((resolve, reject) => {
 });
 
 console.log("Frontend build completed in dist/");
+
+function runCommand(command, args, cwd) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(command, args, {
+      cwd,
+      stdio: "inherit",
+    });
+
+    child.on("error", reject);
+    child.on("close", (code) => {
+      if (code === 0) {
+        resolve();
+        return;
+      }
+
+      reject(new Error(`${command} exited with code ${code}`));
+    });
+  });
+}
