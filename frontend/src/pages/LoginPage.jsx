@@ -1,5 +1,21 @@
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Eye, EyeOff, Lock, Mail, ShieldCheck } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
+
+const loginSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .email("Please enter a valid work email")
+    .max(255, "Email is too long"),
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .max(128, "Password is too long"),
+});
 
 const demoAccounts = [
   {
@@ -8,227 +24,397 @@ const demoAccounts = [
     password: "Admin123!",
   },
   {
-    role: "QC Inspector",
+    role: "QC Inspector", 
     email: "inspector@qualitrack.local",
     password: "Inspect123!",
   },
 ];
 
 function LoginPage() {
+  const [show, setShow] = useState(false);
   const { login } = useAuth();
-  const [form, setForm] = useState({
-    email: demoAccounts[0].email,
-    password: demoAccounts[0].password,
+  const form = useForm({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: "", password: "" },
   });
-  const [message, setMessage] = useState(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  function updateField(event) {
-    const { name, value } = event.target;
-
-    setForm((current) => ({
-      ...current,
-      [name]: value,
-    }));
-  }
-
-  function useDemoAccount(account) {
-    setForm({
-      email: account.email,
-      password: account.password,
-    });
-    setMessage(null);
-  }
-
-  async function handleSubmit(event) {
-    event.preventDefault();
-    setIsSubmitting(true);
-    setMessage(null);
-
+  async function onSubmit(values) {
     try {
-      await login(form.email, form.password);
+      await login(values.email, values.password);
     } catch (error) {
-      setMessage(error.message);
-    } finally {
-      setIsSubmitting(false);
+      form.setError("root", { message: error.message });
     }
   }
 
   return (
-    <main style={{
+    <div style={{
       minHeight: '100vh',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif',
-      backgroundColor: '#f8fafc',
-      color: '#1f2937',
-      padding: '2rem'
+      width: '100%',
+      background: 'linear-gradient(to bottom right, rgba(243, 244, 246, 0.4), white, rgba(59, 130, 246, 0.1))'
     }}>
-      <section style={{
-        display: 'flex',
-        maxWidth: '1200px',
-        margin: '0 auto',
-        gap: '2rem'
+      <div style={{
+        position: 'relative',
+        width: '100%',
+        overflow: 'hidden',
+        backgroundColor: 'white',
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+        border: '1px solid rgba(229, 231, 235, 0.5)',
+        minHeight: '100vh'
       }}>
-        <article style={{
-          flex: 1,
-          textAlign: 'center',
-          padding: '2rem'
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr',
+          minHeight: '100vh'
         }}>
+          <BrandPanel />
           <div style={{
-            display: 'inline-block',
-            marginBottom: '2rem'
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1.5rem',
+            '@media (min-width: 768px)': {
+              padding: '2.5rem'
+            }
           }}>
-            <span style={{
-              display: 'inline-block',
-              width: '60px',
-              height: '60px',
-              backgroundColor: '#3b82f6',
-              color: 'white',
-              borderRadius: '50%',
-              textAlign: 'center',
-              lineHeight: '60px',
-              fontSize: '1.5rem',
-              fontWeight: 'bold',
-              marginRight: '0.5rem'
-            }}>Q</span>
-            <div style={{ display: 'inline-block', verticalAlign: 'middle' }}>
-              <strong style={{ fontSize: '1.5rem', color: '#1f2937' }}>QualiTrack</strong>
-              <span style={{ fontSize: '1rem', color: '#6b7280' }}> Quality Control System</span>
-            </div>
+            <LoginForm />
           </div>
-          <h1 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: '#1f2937' }}>Sign in to your quality control workspace.</h1>
-          <p style={{ marginBottom: '2rem', color: '#6b7280' }}>Choose a demo account or sign in with your own details.</p>
+        </div>
+      </div>
+    </div>
+  );
+}
 
-          <div style={{ marginBottom: '2rem' }}>
-            {demoAccounts.map((account) => (
-              <button
-                key={account.email}
-                type="button"
-                onClick={() => useDemoAccount(account)}
-                style={{
-                  display: 'block',
-                  width: '100%',
-                  padding: '0.75rem',
-                  marginBottom: '0.5rem',
-                  backgroundColor: '#f3f4f6',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '0.375rem',
-                  cursor: 'pointer',
-                  fontSize: '0.875rem'
-                }}
-              >
-                <strong>{account.role}</strong>
-                <span style={{ marginLeft: '0.5rem' }}>{account.email}</span>
-              </button>
-            ))}
-          </div>
-        </article>
+function BrandPanel() {
+  return (
+    <div
+      style={{
+        position: 'relative',
+        display: 'none',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        overflow: 'hidden',
+        background: 'linear-gradient(to bottom right, #3b82f6, #1e40af)',
+        padding: '2.5rem',
+        color: 'white',
+        '@media (min-width: 768px)': {
+          display: 'flex'
+        },
+        borderTopRightRadius: '40% 60%',
+        borderBottomRightRadius: '40% 60%'
+      }}
+    >
+      <div style={{
+        position: 'absolute',
+        left: '-4rem',
+        top: '-4rem',
+        width: '14rem',
+        height: '14rem',
+        borderRadius: '50%',
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        filter: 'blur(40px)',
+        pointerEvents: 'none'
+      }} />
+      <div style={{
+        position: 'absolute',
+        bottom: '-5rem',
+        right: '-2.5rem',
+        width: '18rem',
+        height: '18rem',
+        borderRadius: '50%',
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        filter: 'blur(64px)',
+        pointerEvents: 'none'
+      }} />
 
-        <article style={{
-          flex: 1,
-          backgroundColor: 'white',
-          padding: '2rem',
-          borderRadius: '0.5rem',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-          maxWidth: '400px'
+      <div style={{
+        position: 'relative',
+        zIndex: 10,
+        maxWidth: '20rem',
+        textAlign: 'center'
+      }}>
+        <div style={{
+          margin: '0 auto 1.5rem',
+          display: 'flex',
+          height: '3.5rem',
+          width: '3.5rem',
+          alignItems: 'center',
+          justifyContent: 'center',
+          borderRadius: '1rem',
+          backgroundColor: 'rgba(255, 255, 255, 0.15)',
+          border: '1px solid rgba(255, 255, 255, 0.3)',
+          backdropFilter: 'blur(10px)'
         }}>
-          <div style={{ marginBottom: '1.5rem' }}>
-            <h2 style={{ fontSize: '1.25rem', marginBottom: '0.5rem', color: '#1f2937' }}>Login</h2>
-            <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>Enter your email and password.</p>
-          </div>
+          <ShieldCheck style={{ height: '1.75rem', width: '1.75rem' }} />
+        </div>
+        <h2 style={{
+          fontSize: '2rem',
+          fontWeight: 'bold',
+          letterSpacing: '-0.025em',
+          '@media (min-width: 640px)': {
+            fontSize: '2.25rem'
+          }
+        }}>QualiTrack</h2>
+        <p style={{
+          marginTop: '0.75rem',
+          fontSize: '0.875rem',
+          color: 'rgba(255, 255, 255, 0.85)'
+        }}>
+          Quality control & receiving inspection, built for your team.
+        </p>
+      </div>
+    </div>
+  );
+}
 
-          <form onSubmit={handleSubmit}>
-            <div style={{ marginBottom: '1rem' }}>
-              <label htmlFor="email" style={{ 
-                display: 'block', 
-                marginBottom: '0.5rem', 
-                fontWeight: '500' 
-              }}>Email</label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                value={form.email}
-                onChange={updateField}
-                autoComplete="username"
-                placeholder="admin@qualitrack.local"
-                required
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '0.375rem',
-                  fontSize: '1rem'
-                }}
-              />
-            </div>
+function LoginForm() {
+  const [show, setShow] = useState(false);
+  const { login } = useAuth();
+  const form = useForm({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: "", password: "" },
+  });
 
-            <div style={{ marginBottom: '1rem' }}>
-              <label htmlFor="password" style={{ 
-                display: 'block', 
-                marginBottom: '0.5rem', 
-                fontWeight: '500' 
-              }}>Password</label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                value={form.password}
-                onChange={updateField}
-                autoComplete="current-password"
-                placeholder="Enter your password"
-                required
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '0.375rem',
-                  fontSize: '1rem'
-                }}
-              />
-            </div>
+  async function onSubmit(values) {
+    try {
+      await login(values.email, values.password);
+    } catch (error) {
+      form.setError("root", { message: error.message });
+    }
+  }
 
-            <button 
-              type="submit" 
-              disabled={isSubmitting}
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                backgroundColor: isSubmitting ? '#9ca3af' : '#3b82f6',
-                color: 'white',
-                border: 'none',
-                borderRadius: '0.375rem',
-                fontSize: '1rem',
-                cursor: isSubmitting ? 'not-allowed' : 'pointer'
-              }}
-            >
-              {isSubmitting ? "Signing in..." : "Sign In"}
-            </button>
-          </form>
+  return (
+    <form onSubmit={form.handleSubmit(onSubmit)} style={{ width: '100%', maxWidth: '24rem' }}>
+      <div style={{
+        marginBottom: '1.25rem',
+        textAlign: 'center',
+        '@media (min-width: 768px)': {
+          textAlign: 'left'
+        }
+      }}>
+        <div style={{
+          marginBottom: '1rem',
+          display: 'inline-flex',
+          height: '2.5rem',
+          width: '2.5rem',
+          alignItems: 'center',
+          justifyContent: 'center',
+          borderRadius: '0.75rem',
+          backgroundColor: 'rgba(59, 130, 246, 0.1)',
+          color: '#1e40af',
+          '@media (min-width: 768px)': {
+            display: 'none'
+          }
+        }}>
+          <ShieldCheck style={{ height: '1.25rem', width: '1.25rem' }} />
+        </div>
+        <h1 style={{
+          fontSize: '1.875rem',
+          fontWeight: 'bold',
+          letterSpacing: '-0.025em'
+        }}>Sign in</h1>
+        <p style={{
+          fontSize: '0.875rem',
+          color: '#6b7280'
+        }}>
+          Use your company account to access QualiTrack.
+        </p>
+      </div>
 
-          {message ? <div style={{ 
-            marginTop: '1rem', 
-            padding: '0.75rem', 
-            backgroundColor: '#fef2f2', 
-            border: '1px solid #fecaca', 
-            borderRadius: '0.375rem', 
-            color: '#dc2626' 
-          }}>{message}</div> : null}
+      <FieldWithIcon
+        id="email"
+        label="Work email"
+        icon={<Mail style={{ height: '1rem', width: '1rem' }} />}
+        error={form.formState.errors.email?.message}
+      >
+        <input
+          id="email"
+          type="email"
+          placeholder="you@company.com"
+          maxLength={255}
+          autoComplete="email"
+          {...form.register("email")}
+          style={{
+            width: '100%',
+            padding: '0.75rem',
+            border: 'none',
+            backgroundColor: 'transparent',
+            fontSize: '1rem',
+            outline: 'none'
+          }}
+        />
+      </FieldWithIcon>
 
-          <div style={{ 
-            marginTop: '1.5rem', 
-            padding: '1rem', 
-            backgroundColor: '#f8fafc', 
-            border: '1px solid #e5e7eb', 
-            borderRadius: '0.375rem' 
-          }}>
-            <strong>Demo access</strong>
-            <p style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: '#6b7280' }}>
-              `Admin123!` for admin or `Inspect123!` for QC inspector.
-            </p>
-          </div>
-        </article>
-      </section>
-    </main>
+      <FieldWithIcon
+        id="password"
+        label="Password"
+        icon={<Lock style={{ height: '1rem', width: '1rem' }} />}
+        error={form.formState.errors.password?.message}
+        trailing={
+          <button
+            type="button"
+            onClick={() => setShow((s) => !s)}
+            style={{
+              color: '#6b7280',
+              border: 'none',
+              background: 'none',
+              cursor: 'pointer',
+              padding: '0.5rem'
+            }}
+            aria-label={show ? "Hide password" : "Show password"}
+          >
+            {show ? <EyeOff style={{ height: '1rem', width: '1rem' }} /> : <Eye style={{ height: '1rem', width: '1rem' }} />}
+          </button>
+        }
+      >
+        <input
+          id="password"
+          type={show ? "text" : "password"}
+          placeholder="Password"
+          maxLength={128}
+          autoComplete="current-password"
+          {...form.register("password")}
+          style={{
+            width: '100%',
+            padding: '0.75rem',
+            border: 'none',
+            backgroundColor: 'transparent',
+            fontSize: '1rem',
+            outline: 'none'
+          }}
+        />
+      </FieldWithIcon>
+
+      <div style={{
+        display: 'flex',
+        justifyContent: 'flex-end'
+      }}>
+        <button
+          type="button"
+          style={{
+            fontSize: '0.75rem',
+            color: '#6b7280',
+            border: 'none',
+            background: 'none',
+            cursor: 'pointer',
+            textDecoration: 'underline',
+            textDecorationOffset: '2px'
+          }}
+          onClick={() => alert("Contact your administrator to reset your password.")}
+        >
+          Forgot password?
+        </button>
+      </div>
+
+      <button
+        type="submit"
+        disabled={form.formState.isSubmitting}
+        style={{
+          width: '100%',
+          borderRadius: '9999px',
+          background: 'linear-gradient(to right, #1e40af, #3b82f6)',
+          padding: '1.5rem',
+          fontSize: '1rem',
+          fontWeight: '600',
+          color: 'white',
+          border: 'none',
+          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+          cursor: form.formState.isSubmitting ? 'not-allowed' : 'pointer',
+          opacity: form.formState.isSubmitting ? 0.7 : 1
+        }}
+      >
+        Sign in
+      </button>
+
+      <p style={{
+        textAlign: 'center',
+        fontSize: '0.75rem',
+        color: '#6b7280',
+        marginTop: '1.25rem'
+      }}>
+        Need access?{" "}
+        <button
+          type="button"
+          onClick={() => alert("Please contact your QualiTrack administrator.")}
+          style={{
+            fontWeight: '500',
+            color: '#1e40af',
+            border: 'none',
+            background: 'none',
+            cursor: 'pointer',
+            textDecoration: 'underline',
+            textDecorationOffset: '2px'
+          }}
+        >
+          Contact your administrator
+        </button>
+      </p>
+
+      {form.formState.errors.root && (
+        <p style={{
+          marginTop: '1rem',
+          padding: '0.75rem',
+          backgroundColor: '#fef2f2',
+          border: '1px solid #fecaca',
+          borderRadius: '0.375rem',
+          color: '#dc2626',
+          fontSize: '0.875rem'
+        }}>
+          {form.formState.errors.root.message}
+        </p>
+      )}
+    </form>
+  );
+}
+
+function FieldWithIcon({
+  id,
+  label,
+  icon,
+  trailing,
+  error,
+  children,
+}) {
+  return (
+    <div style={{ marginBottom: '0.375rem' }}>
+      <label htmlFor={id} style={{
+        position: 'absolute',
+        width: '1px',
+        height: '1px',
+        padding: '0',
+        margin: '-1px',
+        overflow: 'hidden',
+        clip: 'rect(0, 0, 0, 0)',
+        whiteSpace: 'nowrap',
+        border: '0'
+      }}>
+        {label}
+      </label>
+      <div
+        style={{
+          position: 'relative',
+          display: 'flex',
+          alignItems: 'center',
+          borderRadius: '9999px',
+          border: error ? '1px solid rgba(220, 38, 38, 0.6)' : '1px solid #e5e7eb',
+          backgroundColor: 'rgba(243, 244, 246, 0.4)',
+          paddingLeft: '1rem',
+          paddingRight: '0.75rem',
+          transition: 'all 0.15s ease-in-out'
+        }}
+      >
+        <span style={{ color: '#6b7280' }}>{icon}</span>
+        <div style={{ flex: 1 }}>
+          {children}
+        </div>
+        {trailing}
+      </div>
+      {error && <p style={{
+        paddingLeft: '1rem',
+        fontSize: '0.75rem',
+        color: '#dc2626'
+      }}>{error}</p>}
+    </div>
   );
 }
 
