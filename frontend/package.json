@@ -24,22 +24,23 @@
     "html2canvas": "^1.4.1",
     "jspdf": "^4.2.1",
     "lucide-react": "^0.376.0",
+    "postcss": "^8.4.38",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.72.1",
     "sonner": "^1.4.41",
     "tailwind-merge": "^2.3.0",
+    "tailwindcss": "^4.1.4",
     "tesseract.js": "^4.1.1",
     "vite": "^8.0.8",
-    "postcss": "^8.4.38",
-    "zod": "^3.25.76",
-    "tailwindcss": "^4.1.4"
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@babel/core": "^7.29.0",
     "@babel/preset-env": "^7.29.0",
     "@babel/preset-react": "^7.28.5",
     "@tailwindcss/cli": "^4.1.4",
+    "@tailwindcss/postcss": "^4.3.2",
     "autoprefixer": "^10.4.19",
     "babelify": "^10.0.0",
     "browserify": "^17.0.1"
