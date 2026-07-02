@@ -123,6 +123,24 @@ export function BarcodeScannerModal({
             Confirm
           </button>
         </div>
+        <div style={{ marginTop: 14, display: "flex", justifyContent: "center" }}>
+          <button
+            onClick={() => {
+              // open document scanner (mobile camera)
+              const evt = new CustomEvent('openDocumentScanner');
+              window.dispatchEvent(evt);
+            }}
+            style={{
+              padding: "8px 12px",
+              borderRadius: "6px",
+              border: "1px solid #d1d5db",
+              background: "#f3f4f6",
+              cursor: "pointer"
+            }}
+          >
+            Scan Document
+          </button>
+        </div>
       </div>
     </div>
   );

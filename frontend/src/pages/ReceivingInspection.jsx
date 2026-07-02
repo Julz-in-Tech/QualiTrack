@@ -4,6 +4,7 @@ import { ReceivingInspectionForm } from "../components/ReceivingInspectionForm";
 import { ReceivingInspectionSummary } from "../components/ReceivingInspectionSummary";
 import { ItemFormModal } from "../components/ItemFormModal";
 import { BarcodeScannerModal } from "../components/BarcodeScannerModal";
+import DocumentScannerModal from "../components/DocumentScannerModal";
 
 export default function ReceivingInspection({ setCurrentPage }) {
   const {
@@ -17,6 +18,7 @@ export default function ReceivingInspection({ setCurrentPage }) {
     currentItem,
     items,
     showBarcodeScanner,
+    showDocumentScanner,
     
     // Actions
     updateField,
@@ -25,9 +27,11 @@ export default function ReceivingInspection({ setCurrentPage }) {
     removeItem,
     editItem,
     handleBarcodeScan,
+    handleDocumentScan,
     handleSubmit,
     setShowItemForm,
     setShowBarcodeScanner,
+    setShowDocumentScanner,
     setMessage,
     
     // Utilities
@@ -35,6 +39,9 @@ export default function ReceivingInspection({ setCurrentPage }) {
     getProductTrends,
     loadSummary
   } = useReceivingInspection();
+
+  // Listen for global event from BarcodeScannerModal to open document scanner
+  window.addEventListener('openDocumentScanner', () => setShowDocumentScanner(true));
 
   return (
     <section style={{ padding: "20px", maxWidth: "1200px", margin: "0 auto" }}>
@@ -128,6 +135,7 @@ export default function ReceivingInspection({ setCurrentPage }) {
             handleSubmit={handleSubmit}
             items={items}
             calculateFailureRate={calculateFailureRate}
+            setShowItemForm={setShowItemForm}
           />
           
           {/* Item Form Modal */}
@@ -146,6 +154,11 @@ export default function ReceivingInspection({ setCurrentPage }) {
             showBarcodeScanner={showBarcodeScanner}
             setShowBarcodeScanner={setShowBarcodeScanner}
             handleBarcodeScan={handleBarcodeScan}
+          />
+          <DocumentScannerModal
+            showDocumentScanner={showDocumentScanner}
+            setShowDocumentScanner={setShowDocumentScanner}
+            onScan={handleDocumentScan}
           />
         </div>
 

@@ -21,6 +21,7 @@ export function useReceivingInspection() {
   const [currentItem, setCurrentItem] = useState(INITIAL_ITEM);
   const [items, setItems] = useState([]);
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
+  const [showDocumentScanner, setShowDocumentScanner] = useState(false);
 
   // Load summary data
   async function loadSummary() {
@@ -150,6 +151,15 @@ export function useReceivingInspection() {
     setShowBarcodeScanner(false);
   }
 
+  function handleDocumentScan(text) {
+    // Place OCR text into comments field by default
+    setForm(prev => ({
+      ...prev,
+      comments: (prev.comments ? prev.comments + "\n" : "") + text
+    }));
+    setShowDocumentScanner(false);
+  }
+
   // Form submission
   async function handleSubmit(event) {
     event.preventDefault();
@@ -264,6 +274,7 @@ export function useReceivingInspection() {
     currentItem,
     items,
     showBarcodeScanner,
+    showDocumentScanner,
     
     // Actions
     updateField,
@@ -272,9 +283,11 @@ export function useReceivingInspection() {
     removeItem,
     editItem,
     handleBarcodeScan,
+    handleDocumentScan,
     handleSubmit,
     setShowItemForm,
     setShowBarcodeScanner,
+    setShowDocumentScanner,
     setMessage,
     
     // Utilities

@@ -66,6 +66,7 @@ function InternalInspection() {
   const [receivingInspections, setReceivingInspections] = useState([]);
   const [selectedReceivingInspection, setSelectedReceivingInspection] = useState(null);
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
+  const [showDocumentScanner, setShowDocumentScanner] = useState(false);
 
   async function loadSummary() {
     try {
@@ -850,6 +851,20 @@ function InternalInspection() {
                       }}
                     >
                       Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => window.dispatchEvent(new CustomEvent('openDocumentScanner'))}
+                      style={{
+                        marginLeft: 8,
+                        padding: "8px 12px",
+                        borderRadius: 6,
+                        border: "1px solid #d1d5db",
+                        background: "#f3f4f6",
+                        cursor: "pointer"
+                      }}
+                    >
+                      Scan Document
                     </button>
                   </div>
                 </div>
