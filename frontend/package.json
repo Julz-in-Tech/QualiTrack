@@ -31,7 +31,9 @@
     "tailwind-merge": "^2.3.0",
     "tesseract.js": "^4.1.1",
     "vite": "^8.0.8",
-    "zod": "^3.25.76"
+    "postcss": "^8.4.38",
+    "zod": "^3.25.76",
+    "tailwindcss": "^4.1.4"
   },
   "devDependencies": {
     "@babel/core": "^7.29.0",
@@ -40,8 +42,6 @@
     "@tailwindcss/cli": "^4.1.4",
     "autoprefixer": "^10.4.19",
     "babelify": "^10.0.0",
-    "browserify": "^17.0.1",
-    "postcss": "^8.4.38",
-    "tailwindcss": "^4.1.4"
+    "browserify": "^17.0.1"
   }
 }
