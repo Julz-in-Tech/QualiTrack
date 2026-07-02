@@ -5,7 +5,7 @@
   "description": "React frontend for the QualiTrack Quality Control Management System",
   "type": "module",
   "engines": {
-    "node": "20.x"
+    "node": "24.x"
   },
   "scripts": {
     "dev": "vite",
